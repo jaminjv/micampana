@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { Body, Button, Chip, ChipRow, Field, Notice, Screen, Segmented, Small, Title, TopBar } from '@/components/ui';
-import { TEMAS } from '@/data/catalogos';
+import { nombreMunicipio, nombreZona, TEMAS } from '@/data/catalogos';
 import { getCandidatoPorUsuario } from '@/data/repo';
 import type { Tema, TipoAporte } from '@/data/types';
 import { useApp } from '@/state/app';
@@ -56,7 +56,9 @@ export default function Escribir() {
           label="Enviar aporte"
           disabled={!valido}
           onPress={() => {
-            enviarAporte({ candidato: c.id, tipo, tema: tema!, texto: texto.trim() });
+            const ub = ciudadano.ubicacion;
+            const lugar = ub.barrio ? `Barrio ${nombreZona(ub.barrio)}` : nombreMunicipio(ub.municipio);
+            enviarAporte({ candidato: c.id, tipo, tema: tema!, texto: texto.trim(), lugar });
             setEnviado(true);
           }}
         />

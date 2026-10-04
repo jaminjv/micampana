@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CandidatoRow } from '@/components/cards';
 import { Badge, Button, Card, Small } from '@/components/ui';
 import { nombreMunicipio } from '@/data/catalogos';
-import { getCandidato, getEvento } from '@/data/repo';
+import { getAporte, getCandidato, getEvento, useDatos } from '@/data/repo';
 import type { EstadoAporte, TipoAporte } from '@/data/types';
 import { diaCorto, hace, horaTexto } from '@/lib/fechas';
 import { useApp } from '@/state/app';
@@ -20,8 +20,10 @@ const TIPO: Record<TipoAporte, string> = { idea: 'Idea', consejo: 'Consejo', cri
 
 /** Mis aportes, candidatos que sigo y eventos a los que asistiré. */
 export default function Actividad() {
-  const { ciudadano, aportes } = useApp();
+  const { ciudadano, misAportes } = useApp();
+  useDatos();
   if (!ciudadano) return null;
+  const aportes = misAportes.map(getAporte).filter((a) => !!a);
   const eventos = ciudadano.asistire.map(getEvento).filter((e) => !!e);
 
   return (

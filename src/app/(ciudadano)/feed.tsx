@@ -6,7 +6,7 @@ import { PostCard } from '@/components/cards';
 import { Chip, Small } from '@/components/ui';
 import { APP_NAME } from '@/config';
 import { nombreMunicipio, nombreZona } from '@/data/catalogos';
-import { feedPara, type FiltroFeed } from '@/data/repo';
+import { feedPara, useDatos, type FiltroFeed } from '@/data/repo';
 import { useApp } from '@/state/app';
 import { colors } from '@/theme';
 
@@ -21,6 +21,7 @@ const FILTROS: { value: FiltroFeed; label: string }[] = [
 export default function Feed() {
   const { ciudadano, alternarAsistire } = useApp();
   const [filtro, setFiltro] = useState<FiltroFeed>('todos');
+  useDatos();
   if (!ciudadano) return null;
   const ub = ciudadano.ubicacion;
   const items = feedPara(ub, filtro, ciudadano.siguiendo);

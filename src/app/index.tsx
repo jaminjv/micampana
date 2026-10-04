@@ -9,7 +9,7 @@ import { colors, radius, type } from '@/theme';
 
 /** Bienvenida: cada tipo de usuario elige por dónde entrar. */
 export default function Bienvenida() {
-  const { reiniciarBorrador, ciudadano, candidatura } = useApp();
+  const { reiniciarBorrador, ciudadano, candidatura, entrarComoDemo } = useApp();
 
   return (
     <SafeAreaView style={s.root}>
@@ -44,6 +44,17 @@ export default function Bienvenida() {
           text="Para coordinadores, líderes y equipos de marketing."
           onPress={() => router.push('/invitacion')}
         />
+        {!candidatura ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              entrarComoDemo();
+              router.push('/panel');
+            }}
+            style={s.demo}>
+            <Text style={s.demoText}>Ver una campaña de ejemplo</Text>
+          </Pressable>
+        ) : null}
       </View>
     </SafeAreaView>
   );
@@ -72,5 +83,7 @@ const s = StyleSheet.create({
   tagline: { fontSize: 16, color: colors.inkSoft, textAlign: 'center', maxWidth: 300, lineHeight: 22 },
   options: { gap: 12, paddingBottom: 8 },
   entrada: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  demo: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  demoText: { fontSize: 14, fontWeight: '600', color: colors.primary },
   entradaIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primaryTint, alignItems: 'center', justifyContent: 'center' },
 });

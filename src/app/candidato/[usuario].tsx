@@ -1,12 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { NumeroTarjeton, PropuestaCard } from '@/components/cards';
 import { Avatar, Badge, Button, Card, Notice, Row, Screen, Segmented, Small, TopBar, VerifiedMark } from '@/components/ui';
 import { CARGOS, nombreDepartamento, nombreMunicipio } from '@/data/catalogos';
 import {
-  cargoConTerritorio, eventosDe, getCandidatoPorUsuario, nivelesPara, propuestasDe, textoAval, type NivelPropuesta,
+  cargoConTerritorio, contarLecturas, eventosDe, getCandidatoPorUsuario, nivelesPara, propuestasDe, textoAval, useDatos, type NivelPropuesta,
 } from '@/data/repo';
 import { diaCorto, horaTexto } from '@/lib/fechas';
 import { useApp } from '@/state/app';
@@ -19,6 +19,15 @@ export default function PerfilCandidato() {
   const { ciudadano, alternarSeguir } = useApp();
   const niveles = c ? nivelesPara(c.cargo) : [];
   const [nivel, setNivel] = useState<NivelPropuesta>(niveles[0] ?? 'municipio');
+  useDatos();
+  const ub = ciudadano?.ubicacion;
+  const visibles = c && c.etapa === 'candidato' ? propuestasDe(c.id, nivel, ub) : [];
+  const idsVisibles = visibles.map((p) => p.id).join(',');
+
+  // Cada vez que un ciudadano ve una propuesta en el perfil cuenta como una lectura.
+  useEffect(() => {
+    if (ciudadano && idsVisibles) contarLecturas(idsVisibles.split(','));
+  }, [ciudadano, idsVisibles]);
 
   if (!c) {
     return (
@@ -29,10 +38,9 @@ export default function PerfilCandidato() {
     );
   }
 
-  const ub = ciudadano?.ubicacion;
   const siguiendo = !!ciudadano?.siguiendo.includes(c.id);
   const aspirante = c.etapa === 'aspirante';
-  const propuestas = propuestasDe(c.id, nivel, ub);
+  const propuestas = visibles;
   const eventos = eventosDe(c.id);
 
   const etiquetaNivel = (n: NivelPropuesta): string => {

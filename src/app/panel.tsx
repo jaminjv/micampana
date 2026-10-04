@@ -1,29 +1,41 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, Ionicons, Notice, Screen, Small, Title, type IconName } from '@/components/ui';
 import { CARGOS, nombreDepartamento, nombreMunicipio, nombrePartido } from '@/data/catalogos';
-import { useApp } from '@/state/app';
+import { aportesDeCampana, propuestasDeCampana } from '@/data/repo';
+import { useApp, useMiCampana } from '@/state/app';
 import { colors, radius } from '@/theme';
 
-interface Herramienta { icon: IconName; titulo: string; texto: string; aspirante: boolean }
+interface Herramienta {
+  icon: IconName;
+  titulo: string;
+  texto: string;
+  aspirante: boolean;
+  /** Pantalla de la herramienta; sin destino, aún está en construcción. */
+  destino?: Href;
+}
 
 const HERRAMIENTAS: Herramienta[] = [
-  { icon: 'chatbubbles', titulo: 'Ideas ciudadanas', texto: 'Lo que te escribe la gente', aspirante: true },
+  { icon: 'chatbubbles', titulo: 'Ideas ciudadanas', texto: 'Lo que te escribe la gente', aspirante: true, destino: '/campana/voces' },
   { icon: 'stats-chart', titulo: 'Sondeos', texto: 'Pregunta a tu región', aspirante: true },
   { icon: 'person-circle', titulo: 'Mi perfil', texto: 'Perfil público y QR', aspirante: true },
   { icon: 'people', titulo: 'Equipo', texto: 'Coordinadores y líderes', aspirante: true },
-  { icon: 'document-text', titulo: 'Propuestas', texto: 'Públicas y permanentes', aspirante: false },
-  { icon: 'newspaper', titulo: 'Publicar en el feed', texto: 'Eventos y mensajes', aspirante: false },
+  { icon: 'document-text', titulo: 'Propuestas', texto: 'Públicas y permanentes', aspirante: false, destino: '/campana/propuestas' },
+  { icon: 'newspaper', titulo: 'Publicar en el feed', texto: 'Eventos y mensajes', aspirante: false, destino: '/campana/publicar' },
   { icon: 'calendar', titulo: 'Agenda y visitas', texto: 'Delegable a un coordinador', aspirante: false },
   { icon: 'images', titulo: 'Marketing', texto: 'Material por evento', aspirante: false },
 ];
 
+/** Herramientas que se pueden usar en el modo "Solo recibir mensajes". */
+const SOLO_MENSAJES = ['Ideas ciudadanas', 'Mi perfil'];
+
 /** Panel del aspirante o candidato después del registro. */
 export default function Panel() {
   const { candidatura, cargarBorrador } = useApp();
+  const campana = useMiCampana();
 
-  if (!candidatura?.cargo) {
+  if (!candidatura?.cargo || !campana) {
     return (
       <Screen>
         <Title>Aún no tienes perfil</Title>
@@ -36,6 +48,25 @@ export default function Panel() {
   const cargo = CARGOS[candidatura.cargo];
   const lugar = candidatura.municipio ? nombreMunicipio(candidatura.municipio) : nombreDepartamento(candidatura.departamento ?? '');
   const soloMensajes = candidatura.modo === 'solo_mensajes';
+  const aportes = aportesDeCampana(campana.id);
+  const sinLeer = aportes.filter((a) => a.estado === 'enviado').length;
+  const publicadas = propuestasDeCampana(campana.id).filter((p) => p.estado === 'publicada').length;
+  const temas = Object.entries(
+    aportes
+      .filter((a) => a.tema !== 'Otro')
+      .reduce<Record<string, number>>((acc, a) => ({ ...acc, [a.tema]: (acc[a.tema] ?? 0) + 1 }), {}),
+  )
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([t]) => t.toLowerCase());
+
+  const destinoDe = (h: Herramienta): Href | undefined =>
+    h.titulo === 'Mi perfil' ? { pathname: '/candidato/[usuario]', params: { usuario: campana.usuario } } : h.destino;
+  const detalle = (h: Herramienta) => {
+    if (h.titulo === 'Ideas ciudadanas' && sinLeer) return `${sinLeer} sin leer`;
+    if (h.titulo === 'Mi perfil') return `@${campana.usuario}`;
+    return h.texto;
+  };
 
   const aval =
     candidatura.tipoAval === 'firmas'
@@ -53,28 +84,41 @@ export default function Panel() {
     <Screen>
       <View style={{ gap: 8 }}>
         <Badge label={`${aspirante ? 'Aspirante' : 'Candidato'} · ${cargo.nombre} · ${lugar}`} tone={aspirante ? 'warn' : 'primary'} />
-        <Title>{`Hola, @${candidatura.usuario}`}</Title>
+        <Title>{`Hola, ${campana.nombre.split(' ')[0]}`}</Title>
         {aval ? <Small>{aval}{candidatura.numero ? ` · N.º ${candidatura.numero}` : ''}</Small> : null}
       </View>
 
-      {!aspirante ? (
+      {!aspirante && !campana.verificado ? (
         <Notice icon="time" tone="warn">Verificando tu aval. Mientras tanto puedes preparar tu perfil.</Notice>
       ) : null}
+
+      <Card>
+        <Text style={s.h3}>Cómo te recibe la gente</Text>
+        <View style={s.stats}>
+          <Stat n={campana.seguidores} label="Seguidores" />
+          <Stat n={aportes.length} label="Aportes recibidos" />
+          {aspirante ? null : <Stat n={publicadas} label="Propuestas" />}
+        </View>
+        {temas.length ? <Small>{`Temas que más te escriben: ${temas.join(', ')}`}</Small> : null}
+      </Card>
 
       <Text style={s.h2}>Tus herramientas</Text>
       <View style={s.grid}>
         {HERRAMIENTAS.map((h) => {
-          const bloqueada = (aspirante && !h.aspirante) || (soloMensajes && !['Ideas ciudadanas', 'Mi perfil'].includes(h.titulo));
+          const bloqueada = (aspirante && !h.aspirante) || (soloMensajes && !SOLO_MENSAJES.includes(h.titulo));
+          const destino = destinoDe(h);
+          const proximamente = !bloqueada && !destino;
           return (
             <Pressable
               key={h.titulo}
               accessibilityRole="button"
-              accessibilityState={{ disabled: bloqueada }}
-              disabled={bloqueada}
-              style={[s.tool, bloqueada && s.toolLocked]}>
-              <Ionicons name={bloqueada ? 'lock-closed' : h.icon} size={22} color={bloqueada ? colors.faint : colors.primary} />
-              <Text style={[s.toolTitle, bloqueada && { color: colors.muted }]}>{h.titulo}</Text>
-              <Text style={s.toolText}>{h.texto}</Text>
+              accessibilityState={{ disabled: bloqueada || proximamente }}
+              disabled={bloqueada || proximamente}
+              onPress={() => destino && router.push(destino)}
+              style={({ pressed }) => [s.tool, (bloqueada || proximamente) && s.toolLocked, pressed && { opacity: 0.85 }]}>
+              <Ionicons name={bloqueada ? 'lock-closed' : h.icon} size={22} color={bloqueada || proximamente ? colors.faint : colors.primary} />
+              <Text style={[s.toolTitle, (bloqueada || proximamente) && { color: colors.muted }]}>{h.titulo}</Text>
+              <Text style={s.toolText}>{proximamente ? 'Próximamente' : detalle(h)}</Text>
             </Pressable>
           );
         })}
@@ -89,13 +133,24 @@ export default function Panel() {
         </Card>
       ) : null}
 
-      <Small>Las herramientas de cada módulo se construyen en las siguientes fases.</Small>
+      <Small>Sondeos, equipo, agenda y marketing se construyen en las siguientes fases.</Small>
       <Button label="Volver al inicio" variant="secondary" onPress={() => router.replace('/')} />
     </Screen>
   );
 }
 
+function Stat({ n, label }: { n: number; label: string }) {
+  return (
+    <View style={{ flex: 1, gap: 2 }}>
+      <Text style={s.statN}>{n.toLocaleString('es-CO')}</Text>
+      <Small>{label}</Small>
+    </View>
+  );
+}
+
 const s = StyleSheet.create({
+  stats: { flexDirection: 'row', gap: 8 },
+  statN: { fontSize: 22, fontWeight: '700', color: colors.ink },
   h2: { fontSize: 18, fontWeight: '700', color: colors.ink },
   h3: { fontSize: 16, fontWeight: '700', color: colors.ink },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },

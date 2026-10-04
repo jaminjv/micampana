@@ -1,4 +1,5 @@
 import { Link } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CARGOS } from '@/data/catalogos';
@@ -40,21 +41,44 @@ export function NumeroTarjeton({ n }: { n: number }) {
   );
 }
 
-/** Tarjeta de propuesta con su territorio y la marca de "Editada". */
+/** Tarjeta de propuesta con su territorio, la marca de "Editada" y sus versiones anteriores. */
 export function PropuestaCard({ p }: { p: Propuesta }) {
+  const [verCambios, setVerCambios] = useState(false);
+  const retirada = p.estado === 'retirada';
   return (
-    <View style={s.card}>
+    <View style={[s.card, retirada && { backgroundColor: colors.background }]}>
       <Row gap={8}>
         <Badge label={p.tema} />
         <Text style={s.meta}>{p.alcance.etiqueta}</Text>
+        {retirada ? <Badge label="Retirada" tone="neutral" /> : null}
       </Row>
-      <Text style={s.title}>{p.titulo}</Text>
+      <Text style={[s.title, retirada && { color: colors.muted }]}>{p.titulo}</Text>
       <Text style={s.body}>{p.resumen}</Text>
-      <Text style={s.meta}>
-        {`Publicada ${fechaCorta(p.publicadaEl)}`}
-        {p.editada ? <Text style={{ color: colors.warnFg, fontWeight: '600' }}>{' · Editada, ver cambios'}</Text> : null}
-      </Text>
-      {p.retirada ? <Badge label="Retirada" tone="neutral" /> : null}
+      {p.retirada ? (
+        <View style={s.version}>
+          <Text style={s.versionLabel}>{`Retirada el ${fechaCorta(p.retirada.fecha)}. Explicación del candidato:`}</Text>
+          <Text style={s.body}>{p.retirada.motivo}</Text>
+        </View>
+      ) : null}
+      <Row gap={4} style={{ flexWrap: 'wrap' }}>
+        <Text style={s.meta}>{`Publicada ${fechaCorta(p.publicadaEl)}`}</Text>
+        {p.editada ? (
+          <Pressable accessibilityRole="button" onPress={() => setVerCambios((v) => !v)} hitSlop={10}>
+            <Text style={[s.meta, { color: colors.warnFg, fontWeight: '600' }]}>
+              {verCambios ? '· Editada, ocultar cambios' : '· Editada, ver cambios'}
+            </Text>
+          </Pressable>
+        ) : null}
+      </Row>
+      {verCambios
+        ? [...p.versiones].reverse().map((v, i) => (
+            <View key={v.guardadaEl + i} style={s.version}>
+              <Text style={s.versionLabel}>{`Versión anterior, cambiada el ${fechaCorta(v.guardadaEl)}`}</Text>
+              <Text style={[s.body, { fontWeight: '600' }]}>{v.titulo}</Text>
+              <Text style={s.body}>{v.resumen}</Text>
+            </View>
+          ))
+        : null}
     </View>
   );
 }
@@ -153,6 +177,8 @@ const s = StyleSheet.create({
   numText: { color: '#FFFFFF', fontSize: 20, fontWeight: '800', lineHeight: 22 },
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, gap: 8 },
   title: { fontSize: 16, fontWeight: '700', color: colors.ink },
+  version: { backgroundColor: colors.background, borderRadius: 10, padding: 12, gap: 4 },
+  versionLabel: { fontSize: 12, fontWeight: '700', color: colors.muted },
   body: { fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   post: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, overflow: 'hidden' },
   postHead: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 },

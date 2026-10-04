@@ -1,11 +1,45 @@
 /**
- * Capa de acceso a datos. Hoy lee los datos de prueba; cuando se configure
- * Supabase, estas funciones se reemplazan por consultas sin cambiar las pantallas.
+ * Capa de acceso a datos. Hoy lee y escribe los datos de prueba en memoria;
+ * cuando se configure Supabase, estas funciones se reemplazan por consultas
+ * sin cambiar las pantallas.
  * Las reglas de visibilidad por territorio viven aquí para que sean una sola.
  */
-import { CARGOS, nombreDepartamento, nombreMunicipio, nombrePartido } from './catalogos';
-import { CANDIDATOS, EVENTOS, PROPUESTAS, PUBLICACIONES } from './mock';
-import type { Alcance, Candidato, Cargo, Evento, Propuesta, Publicacion, Ubicacion } from './types';
+import { useSyncExternalStore } from 'react';
+
+import { CARGOS, municipiosDe, nombreDepartamento, nombreMunicipio, nombrePartido, zonasDe } from './catalogos';
+import { APORTES, CANDIDATOS, EVENTOS, PROPUESTAS, PUBLICACIONES } from './mock';
+import type {
+  Alcance, Aporte, Candidato, Cargo, Etapa, Evento, ModoUso, Propuesta, Publicacion, Tema, TipoAporte, TipoAval,
+  TipoLista, Ubicacion,
+} from './types';
+
+/* ---------- Aviso de cambios ---------- */
+
+let version = 0;
+const oyentes = new Set<() => void>();
+
+function avisar() {
+  version++;
+  oyentes.forEach((f) => f());
+}
+
+const suscribir = (f: () => void) => {
+  oyentes.add(f);
+  return () => {
+    oyentes.delete(f);
+  };
+};
+
+/**
+ * Vuelve a dibujar la pantalla cuando cambian los datos (p. ej. al publicar).
+ * Por esto el React Compiler está apagado en app.json: guardaría en memoria
+ * las consultas a estos datos mutables y no vería los cambios.
+ */
+export function useDatos(): number {
+  return useSyncExternalStore(suscribir, () => version);
+}
+
+const nuevoId = (prefijo: string) => `${prefijo}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
 /** ¿Un alcance territorial incluye la ubicación del ciudadano? */
 export function alcanzaA(alcance: Alcance, ub: Ubicacion): boolean {
@@ -32,6 +66,9 @@ export const getCandidatoPorUsuario = (u: string) =>
   CANDIDATOS.find((c) => c.usuario.toLowerCase() === u.replace(/^@/, '').toLowerCase());
 export const getPropuesta = (id: string) => PROPUESTAS.find((p) => p.id === id);
 export const getEvento = (id: string) => EVENTOS.find((e) => e.id === id);
+export const getAporte = (id: string) => APORTES.find((a) => a.id === id);
+export const usuarioOcupado = (usuario: string, salvo?: string) =>
+  CANDIDATOS.some((c) => c.usuario === usuario && c.id !== salvo);
 
 /** Texto del cargo con su territorio: "Alcaldía de Florencia". */
 export function cargoConTerritorio(c: Candidato): string {
@@ -74,9 +111,9 @@ export function feedPara(ub: Ubicacion, filtro: FiltroFeed, siguiendo: string[])
     }
     if (pub.tipo === 'propuesta') {
       const p = getPropuesta(pub.propuesta);
-      return !!p && alcanzaA(p.alcance, ub);
+      return !!p && p.estado !== 'borrador' && alcanzaA(p.alcance, ub);
     }
-    return true;
+    return !pub.alcance || alcanzaA(pub.alcance, ub);
   }).sort((a, b) => b.fecha.localeCompare(a.fecha));
 }
 
@@ -108,11 +145,228 @@ export function nivelesPara(cargo: Cargo): NivelPropuesta[] {
 
 export function propuestasDe(candidato: string, nivel: NivelPropuesta, ub?: Ubicacion): Propuesta[] {
   return PROPUESTAS.filter((p) => {
-    if (p.candidato !== candidato || p.alcance.nivel !== nivel) return false;
+    if (p.candidato !== candidato || p.estado === 'borrador' || p.alcance.nivel !== nivel) return false;
     return ub ? alcanzaA(p.alcance, ub) : true;
   }).sort((a, b) => b.publicadaEl.localeCompare(a.publicadaEl));
 }
 
 export function eventosDe(candidato: string): Evento[] {
   return EVENTOS.filter((e) => e.candidato === candidato).sort((a, b) => a.fecha.localeCompare(b.fecha));
+}
+
+/* ---------- Campaña del aspirante o candidato ---------- */
+
+export interface DatosCampana {
+  nombre: string;
+  usuario: string;
+  etapa: Etapa;
+  cargo: Cargo;
+  departamento: string;
+  municipio?: string;
+  tipoAval?: TipoAval;
+  partidos: string[];
+  grupoSignificativo?: string;
+  tipoLista?: TipoLista;
+  numero?: number;
+  modo?: ModoUso;
+}
+
+/**
+ * Crea la campaña o actualiza la existente (p. ej. al pasar de aspirante a
+ * candidato). Conserva el id, el @usuario y los seguidores. Devuelve el id.
+ */
+export function guardarCampana(d: DatosCampana, id?: string): string {
+  const actual = id ? getCandidato(id) : undefined;
+  const corporacion = CARGOS[d.cargo].corporacion;
+  const datos: Candidato = {
+    id: actual?.id ?? nuevoId('k'),
+    usuario: actual?.usuario ?? d.usuario,
+    nombre: d.nombre,
+    etapa: d.etapa,
+    verificado: actual?.verificado ?? false,
+    cargo: d.cargo,
+    departamento: d.departamento,
+    municipio: CARGOS[d.cargo].ambito === 'municipio' ? d.municipio : undefined,
+    tipoAval: d.etapa === 'candidato' ? d.tipoAval : undefined,
+    partidos: d.tipoAval === 'firmas' ? [] : d.partidos,
+    grupoSignificativo: d.tipoAval === 'firmas' ? d.grupoSignificativo : undefined,
+    tipoLista: corporacion ? d.tipoLista : undefined,
+    numero: corporacion ? d.numero : undefined,
+    seguidores: actual?.seguidores ?? 0,
+    modo: d.modo,
+  };
+  if (actual) Object.assign(actual, datos);
+  else CANDIDATOS.push(datos);
+  avisar();
+  return datos.id;
+}
+
+/* ---------- Propuestas (lado candidato) ---------- */
+
+/** Todas las propuestas de una campaña, incluidos borradores y retiradas. */
+export function propuestasDeCampana(candidato: string): Propuesta[] {
+  return PROPUESTAS.filter((p) => p.candidato === candidato).sort((a, b) => b.publicadaEl.localeCompare(a.publicadaEl));
+}
+
+export interface DatosPropuesta {
+  titulo: string;
+  resumen: string;
+  tema: Tema;
+  alcance: Alcance;
+}
+
+/** Guarda una propuesta nueva como borrador. Devuelve su id. */
+export function crearBorrador(candidato: string, d: DatosPropuesta): string {
+  const p: Propuesta = {
+    id: nuevoId('p'), candidato, ...d, estado: 'borrador', publicadaEl: new Date().toISOString(),
+    editada: false, versiones: [], lecturas: 0,
+  };
+  PROPUESTAS.push(p);
+  avisar();
+  return p.id;
+}
+
+/** Cambia un borrador. Una propuesta publicada se corrige con corregirPropuesta. */
+export function editarBorrador(id: string, d: DatosPropuesta) {
+  const p = getPropuesta(id);
+  if (!p || p.estado !== 'borrador') throw new Error('Solo se puede editar libremente un borrador.');
+  Object.assign(p, d);
+  avisar();
+}
+
+/**
+ * Publica un borrador. Exige que el candidato haya aceptado la advertencia de
+ * permanencia (la base de datos aplica la misma regla). También lo anuncia en el feed.
+ */
+export function publicarPropuesta(id: string, aceptoPermanencia: boolean) {
+  const p = getPropuesta(id);
+  if (!p || p.estado !== 'borrador') return;
+  if (!aceptoPermanencia) throw new Error('Hay que aceptar la advertencia de permanencia.');
+  const ahora = new Date().toISOString();
+  p.estado = 'publicada';
+  p.publicadaEl = ahora;
+  PUBLICACIONES.push({ id: nuevoId('f'), tipo: 'propuesta', candidato: p.candidato, propuesta: p.id, fecha: ahora });
+  avisar();
+}
+
+/**
+ * Corrige una propuesta publicada: guarda la versión anterior y la marca como
+ * "Editada". El tema y el territorio no cambian.
+ */
+export function corregirPropuesta(id: string, titulo: string, resumen: string, aceptoPermanencia: boolean) {
+  const p = getPropuesta(id);
+  if (!p || p.estado !== 'publicada') return;
+  if (!aceptoPermanencia) throw new Error('Hay que aceptar la advertencia de permanencia.');
+  if (p.titulo === titulo && p.resumen === resumen) return;
+  p.versiones.push({ titulo: p.titulo, resumen: p.resumen, guardadaEl: new Date().toISOString() });
+  p.titulo = titulo;
+  p.resumen = resumen;
+  p.editada = true;
+  avisar();
+}
+
+/** Marca una propuesta publicada como retirada, con una explicación pública. No se borra. */
+export function retirarPropuesta(id: string, motivo: string) {
+  const p = getPropuesta(id);
+  if (!p || p.estado !== 'publicada') return;
+  p.estado = 'retirada';
+  p.retirada = { motivo, fecha: new Date().toISOString() };
+  avisar();
+}
+
+/** Solo se pueden borrar borradores: lo publicado es permanente. */
+export function borrarBorrador(id: string) {
+  const i = PROPUESTAS.findIndex((p) => p.id === id && p.estado === 'borrador');
+  if (i >= 0) PROPUESTAS.splice(i, 1);
+  avisar();
+}
+
+/** Suma una lectura a cada propuesta que un ciudadano vio en un perfil. */
+export function contarLecturas(ids: string[]) {
+  ids.forEach((id) => {
+    const p = getPropuesta(id);
+    if (p) p.lecturas++;
+  });
+}
+
+/**
+ * Territorios del candidato que aún no tienen ninguna propuesta publicada:
+ * barrios en Alcaldía y Concejo, municipios en Gobernación y Asamblea.
+ */
+export function territoriosSinPropuesta(c: Candidato): string[] {
+  const vigentes = PROPUESTAS.filter((p) => p.candidato === c.id && p.estado === 'publicada');
+  if (CARGOS[c.cargo].ambito === 'departamento') {
+    if (vigentes.some((p) => p.alcance.nivel === 'departamento')) return [];
+    const cubiertos = new Set(vigentes.filter((p) => p.alcance.nivel === 'municipio').flatMap((p) => p.alcance.ids));
+    return municipiosDe(c.departamento).filter((m) => !cubiertos.has(m.codigo)).map((m) => m.nombre);
+  }
+  if (!c.municipio || vigentes.some((p) => p.alcance.nivel === 'municipio')) return [];
+  const comunas = new Set(vigentes.filter((p) => p.alcance.nivel === 'comuna').flatMap((p) => p.alcance.ids));
+  const barrios = new Set(vigentes.filter((p) => p.alcance.nivel === 'barrio').flatMap((p) => p.alcance.ids));
+  return zonasDe(c.municipio, 'barrio')
+    .filter((b) => !barrios.has(b.id) && !(b.padre && comunas.has(b.padre)))
+    .map((b) => b.nombre);
+}
+
+/* ---------- Publicar en el feed ---------- */
+
+export function publicarMensaje(candidato: string, texto: string, alcance: Alcance) {
+  PUBLICACIONES.push({ id: nuevoId('f'), tipo: 'mensaje', candidato, texto, alcance, fecha: new Date().toISOString() });
+  avisar();
+}
+
+export interface DatosEvento {
+  titulo: string;
+  fecha: string; // ISO con hora
+  lugar: string;
+  alcance: Alcance;
+}
+
+/** Crea un evento público y lo publica en el feed para que la gente marque "Asistiré". */
+export function publicarEvento(candidato: string, e: DatosEvento, texto: string) {
+  const evento: Evento = { id: nuevoId('e'), candidato, ...e };
+  EVENTOS.push(evento);
+  PUBLICACIONES.push({
+    id: nuevoId('f'), tipo: 'evento', candidato, evento: evento.id, texto, conPieza: false, fecha: new Date().toISOString(),
+  });
+  avisar();
+}
+
+/** Vuelve a anunciar en el feed una propuesta ya publicada. */
+export function anunciarPropuesta(candidato: string, propuesta: string) {
+  PUBLICACIONES.push({ id: nuevoId('f'), tipo: 'propuesta', candidato, propuesta, fecha: new Date().toISOString() });
+  avisar();
+}
+
+/* ---------- Aportes ciudadanos ---------- */
+
+export function enviarAporte(a: { candidato: string; tipo: TipoAporte; tema: Tema; texto: string; lugar: string }): string {
+  const aporte: Aporte = { ...a, id: nuevoId('a'), estado: 'enviado', fecha: new Date().toISOString() };
+  APORTES.push(aporte);
+  avisar();
+  return aporte.id;
+}
+
+/** Bandeja de aportes de una campaña, los más recientes primero. */
+export function aportesDeCampana(candidato: string, tipo?: TipoAporte): Aporte[] {
+  return APORTES.filter((a) => a.candidato === candidato && (!tipo || a.tipo === tipo)).sort((a, b) =>
+    b.fecha.localeCompare(a.fecha),
+  );
+}
+
+/** El equipo empezó a revisar el aporte: el ciudadano lo ve "En revisión". */
+export function marcarEnRevision(id: string) {
+  const a = getAporte(id);
+  if (a && a.estado === 'enviado') {
+    a.estado = 'en_revision';
+    avisar();
+  }
+}
+
+export function responderAporte(id: string, respuesta: string) {
+  const a = getAporte(id);
+  if (!a) return;
+  a.respuesta = respuesta;
+  a.estado = 'respondido';
+  avisar();
 }

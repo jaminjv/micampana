@@ -12,12 +12,14 @@ El nombre es provisional: se cambia en `src/config.ts` y `app.json`.
 | --- | --- |
 | Bienvenida (ciudadano / aspirante o candidato / código de invitación) | Hecho |
 | Registro de aspirante o candidato: etapa, cargo, territorio (municipios automáticos por departamento), aval (partido, coalición o firmas), lista y número (Asamblea y Concejo), @usuario | Hecho |
-| Panel del aspirante o candidato, con herramientas bloqueadas según etapa y paso de aspirante a candidato | Hecho (las herramientas internas van en la fase siguiente) |
+| Panel del aspirante o candidato, con herramientas bloqueadas según etapa y paso de aspirante a candidato | Hecho |
+| Lado candidato: mis propuestas (borradores, advertencia de permanencia, correcciones con versión anterior visible, retirar con explicación, lecturas y barrios sin propuesta), publicar en el feed (evento, propuesta o mensaje por territorio), voces ciudadanas (filtrar y responder) | Hecho |
 | Versión ciudadano: registro con autorización de datos, feed por región (cronológico y neutral), buscador con filtros (región, cargo, partido incluida coalición), perfil con "¿Qué propone para ti?" por barrio, comuna y ciudad, escribir aportes, mi actividad | Hecho |
 | Esquema de base de datos Supabase con permisos por fila (RLS) | Hecho y probado en PostgreSQL |
 | Conexión real a Supabase (hoy usa datos de prueba) | Pendiente |
 | Versiones de coordinador, líder comunal y marketing | Pendiente |
-| Propuestas, publicaciones en el feed, agenda, equipos y material (lado candidato) | Pendiente |
+| Agenda, compromisos, sondeos, equipo y marketing (lado candidato) | Pendiente |
+| Fotos y video en propuestas y piezas gráficas en eventos | Pendiente |
 
 ## Cómo correrla en tu celular
 
@@ -38,7 +40,11 @@ Antes de dar algo por terminado: `npx tsc --noEmit` (revisión de tipos) y `npx 
 
 Sin configurar Supabase, la app usa datos ficticios (`src/data/mock.ts`) de Caquetá y Florencia: cinco candidatos (alcaldía, gobernación en coalición, concejo con número, asamblea con número y una aspirante), propuestas, eventos y publicaciones. Para ver el feed con contenido, regístrate como ciudadano en **Caquetá → Florencia → Comuna 1 → El Prado**.
 
+Para conocer las herramientas del candidato sin registrarte, toca **Ver una campaña de ejemplo** en la bienvenida: entras como Laura Gómez (Alcaldía de Florencia), con propuestas y aportes ciudadanos. Lo que publiques ahí lo ve el ciudadano de prueba en su feed y en el perfil de Laura.
+
 Todo vive en memoria: al recargar la app se reinicia.
+
+El React Compiler está apagado en `app.json` (`experiments.reactCompiler`) porque guardaría en memoria las consultas a los datos de prueba, que se modifican en el sitio. Al conectar Supabase se puede volver a encender.
 
 ## Conectar Supabase
 
@@ -71,6 +77,7 @@ src/
     panel.tsx          Panel del aspirante o candidato
     ciudadano/         Registro del ciudadano
     (ciudadano)/       Pestañas: feed, aportar, buscar, actividad
+    campana/           Herramientas del candidato: propuestas, publicar en el feed, voces ciudadanas
     candidato/         Perfil público del candidato
     escribir/          Escribir un aporte
   components/          Interfaz compartida (ui.tsx, cards.tsx, ListPicker.tsx)
@@ -87,7 +94,7 @@ supabase/
 ## Siguientes pasos sugeridos
 
 1. Conectar Supabase con ingreso por celular (código SMS).
-2. Lado candidato: propuestas con advertencia de permanencia, publicar en el feed, ideas ciudadanas.
+2. Lado candidato: agenda del día (pestaña Hoy), compromisos de visitas y "A compromiso" desde un aporte.
 3. Versión coordinador: aprobaciones de colaboradores, agenda delegada del candidato, tareas por territorio.
 4. Versión líder comunal: tareas, mi gente con fotos, material con calendario, modo sin conexión.
 5. Versión marketing: material de eventos en tiempo real y envío a la red.

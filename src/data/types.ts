@@ -79,6 +79,16 @@ export interface Candidato {
   tipoLista?: TipoLista;
   numero?: number;
   seguidores: number;
+  modo?: ModoUso;
+}
+
+export type EstadoPropuesta = 'borrador' | 'publicada' | 'retirada';
+
+/** Versión anterior de una propuesta publicada que luego se corrigió. */
+export interface VersionPropuesta {
+  titulo: string;
+  resumen: string;
+  guardadaEl: string; // ISO
 }
 
 export interface Propuesta {
@@ -88,8 +98,11 @@ export interface Propuesta {
   resumen: string;
   tema: Tema;
   alcance: Alcance;
-  publicadaEl: string; // ISO
+  estado: EstadoPropuesta;
+  publicadaEl: string; // ISO; en un borrador, la fecha de creación
   editada: boolean;
+  versiones: VersionPropuesta[]; // de la más antigua a la más reciente
+  lecturas: number;
   retirada?: { motivo: string; fecha: string };
 }
 
@@ -105,11 +118,12 @@ export interface Evento {
 export type Publicacion =
   | { id: string; tipo: 'evento'; candidato: string; texto: string; evento: string; fecha: string; conPieza: boolean }
   | { id: string; tipo: 'propuesta'; candidato: string; propuesta: string; fecha: string }
-  | { id: string; tipo: 'mensaje'; candidato: string; texto: string; fecha: string };
+  | { id: string; tipo: 'mensaje'; candidato: string; texto: string; fecha: string; alcance?: Alcance };
 
 export interface Aporte {
   id: string;
   candidato: string;
+  lugar: string; // barrio o municipio de quien escribe, p. ej. "Barrio El Prado"
   tipo: TipoAporte;
   tema: Tema;
   texto: string;

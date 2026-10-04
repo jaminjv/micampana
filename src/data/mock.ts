@@ -1,4 +1,8 @@
-/** Contenido de prueba: candidatos, propuestas, eventos y publicaciones ficticios. */
+/**
+ * Contenido de prueba: candidatos, propuestas, eventos y publicaciones ficticios.
+ * Las listas son mutables: repo.ts les agrega lo que se crea en la app mientras
+ * no esté conectado Supabase (al recargar se reinicia).
+ */
 import type { Aporte, Candidato, Evento, Propuesta, Publicacion } from './types';
 
 export const CANDIDATOS: Candidato[] = [
@@ -42,31 +46,32 @@ export const PROPUESTAS: Propuesta[] = [
     id: 'p1', candidato: 'k1', tema: 'Vías', titulo: 'Pavimentar la vía principal de El Prado',
     resumen: 'Pavimentación completa de la vía principal y andenes accesibles, priorizada con la junta de acción comunal.',
     alcance: { nivel: 'barrio', ids: ['b-prado'], etiqueta: 'Barrio El Prado' },
-    publicadaEl: haceHoras(72), editada: true,
+    publicadaEl: haceHoras(72), editada: true, estado: 'publicada', lecturas: 340,
+    versiones: [{ titulo: 'Pavimentar la vía principal de El Prado', resumen: 'Pavimentación de la vía principal del barrio.', guardadaEl: haceHoras(72) }],
   },
   {
     id: 'p2', candidato: 'k1', tema: 'Seguridad', titulo: 'Alumbrado y cámaras en la Comuna 1',
     resumen: 'Renovar el alumbrado público con luminarias LED y conectar cámaras al centro de monitoreo.',
     alcance: { nivel: 'comuna', ids: ['c1'], etiqueta: 'Comuna 1' },
-    publicadaEl: haceHoras(120), editada: false,
+    publicadaEl: haceHoras(120), editada: false, estado: 'publicada', lecturas: 512, versiones: [],
   },
   {
     id: 'p3', candidato: 'k1', tema: 'Empleo', titulo: 'Primer empleo para jóvenes',
     resumen: 'Convenios con empresas locales para que jóvenes de 18 a 28 años consigan su primer trabajo formal.',
     alcance: { nivel: 'municipio', ids: ['18001'], etiqueta: 'Florencia' },
-    publicadaEl: haceHoras(200), editada: false,
+    publicadaEl: haceHoras(200), editada: false, estado: 'publicada', lecturas: 1204, versiones: [],
   },
   {
     id: 'p4', candidato: 'k2', tema: 'Vías', titulo: 'Vías terciarias para sacar la cosecha',
     resumen: 'Mantenimiento de vías terciarias en los 16 municipios con maquinaria propia del departamento.',
     alcance: { nivel: 'departamento', ids: ['18'], etiqueta: 'Caquetá' },
-    publicadaEl: haceHoras(30), editada: false,
+    publicadaEl: haceHoras(30), editada: false, estado: 'publicada', lecturas: 2210, versiones: [],
   },
   {
     id: 'p5', candidato: 'k3', tema: 'Medio ambiente', titulo: 'Parques de bolsillo en los barrios',
     resumen: 'Recuperar lotes abandonados como parques pequeños con árboles nativos.',
     alcance: { nivel: 'municipio', ids: ['18001'], etiqueta: 'Florencia' },
-    publicadaEl: haceHoras(50), editada: false,
+    publicadaEl: haceHoras(50), editada: false, estado: 'publicada', lecturas: 187, versiones: [],
   },
 ];
 
@@ -94,10 +99,19 @@ export const PUBLICACIONES: Publicacion[] = [
   { id: 'f5', tipo: 'propuesta', candidato: 'k1', propuesta: 'p1', fecha: haceHoras(72) },
 ];
 
-export const APORTES_INICIALES: Aporte[] = [
-  { id: 'a1', candidato: 'k1', tipo: 'idea', tema: 'Empleo', estado: 'respondido', fecha: haceHoras(96),
+/** Aportes de ciudadanos. a1 y a2 son del ciudadano de prueba que usa la app. */
+export const APORTES: Aporte[] = [
+  { id: 'a1', candidato: 'k1', lugar: 'Barrio El Prado', tipo: 'idea', tema: 'Empleo', estado: 'respondido', fecha: haceHoras(96),
     texto: 'Ferias de empleo en los colegios para los que terminan el bachillerato.',
     respuesta: 'Gracias por la idea. La sumamos a la propuesta de primer empleo.' },
-  { id: 'a2', candidato: 'k1', tipo: 'solicitud', tema: 'Seguridad', estado: 'en_revision', fecha: haceHoras(48),
+  { id: 'a2', candidato: 'k1', lugar: 'Barrio El Prado', tipo: 'solicitud', tema: 'Seguridad', estado: 'en_revision', fecha: haceHoras(48),
     texto: 'El alumbrado de la calle 8 lleva meses dañado.' },
+  { id: 'a3', candidato: 'k1', lugar: 'Barrio San Luis', tipo: 'idea', tema: 'Empleo', estado: 'enviado', fecha: haceHoras(5),
+    texto: 'Una plaza de mercado campesino los sábados en San Luis daría trabajo a muchas familias.' },
+  { id: 'a4', candidato: 'k1', lugar: 'Barrio Centro', tipo: 'critica', tema: 'Otro', estado: 'enviado', fecha: haceHoras(20),
+    texto: 'En el último evento no hubo sillas para los adultos mayores y muchos se tuvieron que ir.' },
+  { id: 'a5', candidato: 'k1', lugar: 'Barrio Las Palmas', tipo: 'solicitud', tema: 'Vías', estado: 'enviado', fecha: haceHoras(30),
+    texto: 'La calle 12 se inunda cada vez que llueve; necesitamos alcantarillado pluvial.' },
+  { id: 'a6', candidato: 'k1', lugar: 'Barrio El Prado', tipo: 'consejo', tema: 'Educación', estado: 'enviado', fecha: haceHoras(60),
+    texto: 'Hablen con los rectores antes de proponer cambios en los colegios; ellos conocen el problema.' },
 ];

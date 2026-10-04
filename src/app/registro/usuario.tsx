@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Button, Card, Field, Ionicons, OptionCard, Progress, Screen, Small, Title, TopBar } from '@/components/ui';
 import { APP_NAME } from '@/config';
-import { CANDIDATOS } from '@/data/mock';
+import { usuarioOcupado } from '@/data/repo';
 import { useApp } from '@/state/app';
 import { posicion } from '@/state/pasos';
 import { colors } from '@/theme';
@@ -12,12 +12,13 @@ const FORMATO = /^[a-z0-9_]{3,20}$/;
 
 /** Último paso: @usuario, QR para las piezas y modo de uso. */
 export default function Usuario() {
-  const { borrador, actualizarBorrador, confirmarCandidatura } = useApp();
+  const { borrador, actualizarBorrador, confirmarCandidatura, campanaId } = useApp();
   const { paso, total } = posicion(borrador, 'usuario');
   const usuario = borrador.usuario ?? '';
   const formatoOk = FORMATO.test(usuario);
-  const ocupado = CANDIDATOS.some((c) => c.usuario === usuario);
+  const ocupado = usuarioOcupado(usuario, campanaId ?? undefined);
   const disponible = formatoOk && !ocupado;
+  const nombreOk = (borrador.nombre ?? '').trim().length >= 3;
   const esCandidato = borrador.etapa === 'candidato';
   const modo = borrador.modo ?? 'campana_completa';
 
@@ -36,7 +37,7 @@ export default function Usuario() {
       footer={
         <Button
           label={esCandidato ? 'Crear perfil y enviar a verificación' : 'Crear mi perfil'}
-          disabled={!disponible}
+          disabled={!disponible || !nombreOk}
           onPress={() => {
             const b = { ...borrador, modo: esCandidato ? modo : undefined };
             confirmarCandidatura(b);
@@ -47,6 +48,15 @@ export default function Usuario() {
       }>
       <Progress paso={paso} total={total} etiqueta="Crear tu perfil" />
       <Title>Tu perfil público</Title>
+
+      <Field
+        label="Nombre público"
+        value={borrador.nombre ?? ''}
+        onChangeText={(t) => actualizarBorrador({ nombre: t })}
+        placeholder="Como aparecerás en el tarjetón"
+        autoCapitalize="words"
+        hint="Los ciudadanos te buscarán por este nombre o por tu @usuario."
+      />
 
       <View style={{ gap: 6 }}>
         <Field
