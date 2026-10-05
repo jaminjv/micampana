@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ionicons, type IconName } from '@/components/ui';
 import { APP_NAME } from '@/config';
+import { conectado } from '@/data/remoto';
 import { useApp } from '@/state/app';
 import { colors, radius, type } from '@/theme';
 
@@ -44,7 +45,7 @@ export default function Bienvenida() {
           text="Para coordinadores, líderes y equipos de marketing."
           onPress={() => router.push('/invitacion')}
         />
-        {!candidatura ? (
+        {!candidatura && !conectado ? (
           <Pressable
             accessibilityRole="button"
             onPress={() => {

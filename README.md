@@ -16,7 +16,9 @@ El nombre es provisional: se cambia en `src/config.ts` y `app.json`.
 | Lado candidato: mis propuestas (borradores, advertencia de permanencia, correcciones con versión anterior visible, retirar con explicación, lecturas y barrios sin propuesta), publicar en el feed (evento, propuesta o mensaje por territorio), voces ciudadanas (filtrar y responder) | Hecho |
 | Versión ciudadano: registro con autorización de datos, feed por región (cronológico y neutral), buscador con filtros (región, cargo, partido incluida coalición), perfil con "¿Qué propone para ti?" por barrio, comuna y ciudad, escribir aportes, mi actividad | Hecho |
 | Esquema de base de datos Supabase con permisos por fila (RLS) | Hecho y probado en PostgreSQL |
-| Conexión real a Supabase (hoy usa datos de prueba) | Pendiente |
+| Conexión a Supabase: carga y guarda campañas, propuestas (con versiones y lecturas), feed, eventos, aportes, seguidores y "Asistiré" | Hecho y probado con PostgREST local |
+| Ingreso por celular con código SMS (hoy cada teléfono entra con una cuenta anónima) | Pendiente |
+| Subir el aval al pasar de aspirante a candidato (con Supabase, la base de datos lo exige) | Pendiente |
 | Versiones de coordinador, líder comunal y marketing | Pendiente |
 | Agenda, compromisos, sondeos, equipo y marketing (lado candidato) | Pendiente |
 | Fotos y video en propuestas y piezas gráficas en eventos | Pendiente |
@@ -44,14 +46,19 @@ Para conocer las herramientas del candidato sin registrarte, toca **Ver una camp
 
 Todo vive en memoria: al recargar la app se reinicia.
 
-El React Compiler está apagado en `app.json` (`experiments.reactCompiler`) porque guardaría en memoria las consultas a los datos de prueba, que se modifican en el sitio. Al conectar Supabase se puede volver a encender.
+El React Compiler está apagado en `app.json` (`experiments.reactCompiler`) porque guardaría en memoria las consultas a las listas de datos, que la app modifica en el sitio (también con Supabase).
 
 ## Conectar Supabase
 
+Sin las variables de `.env`, la app usa los datos de prueba. Con ellas, carga y guarda todo en tu proyecto de Supabase.
+
 1. Crea un proyecto en [supabase.com](https://supabase.com).
-2. En el editor SQL, ejecuta `supabase/migrations/0001_esquema_inicial.sql` y luego `supabase/seed.sql`.
-3. Copia `.env.example` como `.env` y pon la URL y la clave pública (anon key) del proyecto.
-4. Reemplaza las funciones de `src/data/repo.ts` por consultas con el cliente de `src/lib/supabase.ts`. Las pantallas no cambian.
+2. En **SQL Editor**, ejecuta en este orden, cada archivo completo: `supabase/migrations/0001_esquema_inicial.sql`, `supabase/migrations/0002_conexion_app.sql` y `supabase/seed.sql`.
+3. En **Authentication → Sign In / Providers**, activa **Allow anonymous sign-ins**. Mientras no esté el ingreso por SMS, cada teléfono entra con una cuenta anónima que se conserva en el aparato (si se borran los datos de la app, se pierde).
+4. En **Project Settings → API**, copia la **Project URL** y la clave pública (**anon** / **publishable**). Copia `.env.example` como `.env` y pon ahí esos dos valores. Nunca pongas la clave `service_role`: esa da acceso total y no debe ir en la app.
+5. Detén la app (`Ctrl + C`) y vuelve a abrirla con `npx expo start`.
+
+Cómo funciona: al abrir, `src/data/remoto.ts` inicia sesión y carga los datos en las listas en memoria que usan las pantallas; cada cambio se aplica en pantalla y se guarda en la base de datos en orden. Si algo no se guarda, aparece un aviso en rojo con el motivo. Los permisos los aplica la base de datos (RLS).
 
 Antes de producción:
 - Cargar la lista oficial de partidos con personería jurídica vigente del **CNE** en la tabla `partidos` (la del seed es de ejemplo).
@@ -93,7 +100,7 @@ supabase/
 
 ## Siguientes pasos sugeridos
 
-1. Conectar Supabase con ingreso por celular (código SMS).
+1. Ingreso por celular con código SMS (requiere un proveedor de SMS en Supabase, p. ej. Twilio) y subir el aval al actualizar a candidato.
 2. Lado candidato: agenda del día (pestaña Hoy), compromisos de visitas y "A compromiso" desde un aporte.
 3. Versión coordinador: aprobaciones de colaboradores, agenda delegada del candidato, tareas por territorio.
 4. Versión líder comunal: tareas, mi gente con fotos, material con calendario, modo sin conexión.

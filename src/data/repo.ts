@@ -8,6 +8,7 @@ import { useSyncExternalStore } from 'react';
 
 import { CARGOS, municipiosDe, nombreDepartamento, nombreMunicipio, nombrePartido, zonasDe } from './catalogos';
 import { APORTES, CANDIDATOS, EVENTOS, PROPUESTAS, PUBLICACIONES } from './mock';
+import * as remoto from './remoto';
 import type {
   Alcance, Aporte, Candidato, Cargo, Etapa, Evento, ModoUso, Propuesta, Publicacion, Tema, TipoAporte, TipoAval,
   TipoLista, Ubicacion,
@@ -39,7 +40,12 @@ export function useDatos(): number {
   return useSyncExternalStore(suscribir, () => version);
 }
 
-const nuevoId = (prefijo: string) => `${prefijo}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+/** Id nuevo en formato UUID, el que usa la base de datos. */
+const nuevoId = () =>
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => {
+    const r = (Math.random() * 16) | 0;
+    return (ch === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
 
 /** ¿Un alcance territorial incluye la ubicación del ciudadano? */
 export function alcanzaA(alcance: Alcance, ub: Ubicacion): boolean {
@@ -179,7 +185,7 @@ export function guardarCampana(d: DatosCampana, id?: string): string {
   const actual = id ? getCandidato(id) : undefined;
   const corporacion = CARGOS[d.cargo].corporacion;
   const datos: Candidato = {
-    id: actual?.id ?? nuevoId('k'),
+    id: actual?.id ?? nuevoId(),
     usuario: actual?.usuario ?? d.usuario,
     nombre: d.nombre,
     etapa: d.etapa,
@@ -197,6 +203,7 @@ export function guardarCampana(d: DatosCampana, id?: string): string {
   };
   if (actual) Object.assign(actual, datos);
   else CANDIDATOS.push(datos);
+  remoto.guardarCampana(datos);
   avisar();
   return datos.id;
 }
@@ -218,10 +225,11 @@ export interface DatosPropuesta {
 /** Guarda una propuesta nueva como borrador. Devuelve su id. */
 export function crearBorrador(candidato: string, d: DatosPropuesta): string {
   const p: Propuesta = {
-    id: nuevoId('p'), candidato, ...d, estado: 'borrador', publicadaEl: new Date().toISOString(),
+    id: nuevoId(), candidato, ...d, estado: 'borrador', publicadaEl: new Date().toISOString(),
     editada: false, versiones: [], lecturas: 0,
   };
   PROPUESTAS.push(p);
+  remoto.crearBorrador(p);
   avisar();
   return p.id;
 }
@@ -231,6 +239,7 @@ export function editarBorrador(id: string, d: DatosPropuesta) {
   const p = getPropuesta(id);
   if (!p || p.estado !== 'borrador') throw new Error('Solo se puede editar libremente un borrador.');
   Object.assign(p, d);
+  remoto.editarBorrador(p);
   avisar();
 }
 
@@ -245,7 +254,9 @@ export function publicarPropuesta(id: string, aceptoPermanencia: boolean) {
   const ahora = new Date().toISOString();
   p.estado = 'publicada';
   p.publicadaEl = ahora;
-  PUBLICACIONES.push({ id: nuevoId('f'), tipo: 'propuesta', candidato: p.candidato, propuesta: p.id, fecha: ahora });
+  const pub = nuevoId();
+  PUBLICACIONES.push({ id: pub, tipo: 'propuesta', candidato: p.candidato, propuesta: p.id, fecha: ahora });
+  remoto.publicarPropuesta(p, pub);
   avisar();
 }
 
@@ -262,6 +273,7 @@ export function corregirPropuesta(id: string, titulo: string, resumen: string, a
   p.titulo = titulo;
   p.resumen = resumen;
   p.editada = true;
+  remoto.corregirPropuesta(p);
   avisar();
 }
 
@@ -271,13 +283,16 @@ export function retirarPropuesta(id: string, motivo: string) {
   if (!p || p.estado !== 'publicada') return;
   p.estado = 'retirada';
   p.retirada = { motivo, fecha: new Date().toISOString() };
+  remoto.retirarPropuesta(p);
   avisar();
 }
 
 /** Solo se pueden borrar borradores: lo publicado es permanente. */
 export function borrarBorrador(id: string) {
   const i = PROPUESTAS.findIndex((p) => p.id === id && p.estado === 'borrador');
-  if (i >= 0) PROPUESTAS.splice(i, 1);
+  if (i < 0) return;
+  PROPUESTAS.splice(i, 1);
+  remoto.borrarBorrador(id);
   avisar();
 }
 
@@ -287,6 +302,7 @@ export function contarLecturas(ids: string[]) {
     const p = getPropuesta(id);
     if (p) p.lecturas++;
   });
+  remoto.contarLecturas(ids);
 }
 
 /**
@@ -311,7 +327,11 @@ export function territoriosSinPropuesta(c: Candidato): string[] {
 /* ---------- Publicar en el feed ---------- */
 
 export function publicarMensaje(candidato: string, texto: string, alcance: Alcance) {
-  PUBLICACIONES.push({ id: nuevoId('f'), tipo: 'mensaje', candidato, texto, alcance, fecha: new Date().toISOString() });
+  const pub: Extract<Publicacion, { tipo: 'mensaje' }> = {
+    id: nuevoId(), tipo: 'mensaje', candidato, texto, alcance, fecha: new Date().toISOString(),
+  };
+  PUBLICACIONES.push(pub);
+  remoto.publicarMensaje(pub);
   avisar();
 }
 
@@ -324,25 +344,32 @@ export interface DatosEvento {
 
 /** Crea un evento público y lo publica en el feed para que la gente marque "Asistiré". */
 export function publicarEvento(candidato: string, e: DatosEvento, texto: string) {
-  const evento: Evento = { id: nuevoId('e'), candidato, ...e };
+  const evento: Evento = { id: nuevoId(), candidato, ...e };
+  const pub: Extract<Publicacion, { tipo: 'evento' }> = {
+    id: nuevoId(), tipo: 'evento', candidato, evento: evento.id, texto, conPieza: false, fecha: new Date().toISOString(),
+  };
   EVENTOS.push(evento);
-  PUBLICACIONES.push({
-    id: nuevoId('f'), tipo: 'evento', candidato, evento: evento.id, texto, conPieza: false, fecha: new Date().toISOString(),
-  });
+  PUBLICACIONES.push(pub);
+  remoto.publicarEvento(evento, pub);
   avisar();
 }
 
 /** Vuelve a anunciar en el feed una propuesta ya publicada. */
 export function anunciarPropuesta(candidato: string, propuesta: string) {
-  PUBLICACIONES.push({ id: nuevoId('f'), tipo: 'propuesta', candidato, propuesta, fecha: new Date().toISOString() });
+  const p = getPropuesta(propuesta);
+  if (!p || p.estado !== 'publicada') return;
+  const pub = { id: nuevoId(), tipo: 'propuesta' as const, candidato, propuesta, fecha: new Date().toISOString() };
+  PUBLICACIONES.push(pub);
+  remoto.anunciarPropuesta(p, pub.id, pub.fecha);
   avisar();
 }
 
 /* ---------- Aportes ciudadanos ---------- */
 
 export function enviarAporte(a: { candidato: string; tipo: TipoAporte; tema: Tema; texto: string; lugar: string }): string {
-  const aporte: Aporte = { ...a, id: nuevoId('a'), estado: 'enviado', fecha: new Date().toISOString() };
+  const aporte: Aporte = { ...a, id: nuevoId(), estado: 'enviado', fecha: new Date().toISOString() };
   APORTES.push(aporte);
+  remoto.enviarAporte(aporte);
   avisar();
   return aporte.id;
 }
@@ -359,6 +386,7 @@ export function marcarEnRevision(id: string) {
   const a = getAporte(id);
   if (a && a.estado === 'enviado') {
     a.estado = 'en_revision';
+    remoto.actualizarAporte(a);
     avisar();
   }
 }
@@ -368,5 +396,20 @@ export function responderAporte(id: string, respuesta: string) {
   if (!a) return;
   a.respuesta = respuesta;
   a.estado = 'respondido';
+  remoto.actualizarAporte(a);
   avisar();
+}
+
+/* ---------- Seguir y asistir ---------- */
+
+/** Seguir o dejar de seguir a un candidato; actualiza su número de seguidores. */
+export function seguir(candidato: string, si: boolean) {
+  const c = getCandidato(candidato);
+  if (c) c.seguidores = Math.max(0, c.seguidores + (si ? 1 : -1));
+  remoto.seguir(candidato, si);
+  avisar();
+}
+
+export function asistir(evento: string, si: boolean) {
+  remoto.asistir(evento, si);
 }

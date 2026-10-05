@@ -39,3 +39,16 @@ insert into municipios (codigo, nombre, departamento, capital) values
   ('18014', 'Solano', '18', false),
   ('18015', 'Solita', '18', false),
   ('18016', 'Valparaíso', '18', false);
+
+-- Comunas y barrios de ejemplo para Florencia (ids fijos para poder probar).
+-- Cada municipio tiene su propia división; el candidato puede completarla.
+insert into zonas (id, nombre, tipo, municipio, padre) values
+  ('a0000000-0000-0000-0000-000000000c01', 'Comuna 1', 'comuna', '18001', null),
+  ('a0000000-0000-0000-0000-000000000c02', 'Comuna 2', 'comuna', '18001', null),
+  ('a0000000-0000-0000-0000-000000000c03', 'Comuna 3', 'comuna', '18001', null),
+  ('a0000000-0000-0000-0000-000000000c04', 'Comuna 4', 'comuna', '18001', null);
+insert into zonas (id, nombre, tipo, municipio, padre) values
+  ('a0000000-0000-0000-0000-000000000b01', 'El Prado', 'barrio', '18001', 'a0000000-0000-0000-0000-000000000c01'),
+  ('a0000000-0000-0000-0000-000000000b02', 'Centro', 'barrio', '18001', 'a0000000-0000-0000-0000-000000000c01'),
+  ('a0000000-0000-0000-0000-000000000b03', 'San Luis', 'barrio', '18001', 'a0000000-0000-0000-0000-000000000c02'),
+  ('a0000000-0000-0000-0000-000000000b04', 'Las Palmas', 'barrio', '18001', 'a0000000-0000-0000-0000-000000000c03');

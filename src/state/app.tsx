@@ -1,10 +1,12 @@
 /**
- * Estado global de la sesión. Hoy vive en memoria; con Supabase, el ciudadano,
- * los aportes y la candidatura se guardan en la base de datos.
+ * Estado global de la sesión. Sin Supabase vive en memoria; con Supabase, al
+ * abrir se carga el ciudadano, la campaña y los aportes de quien usa la app,
+ * y cada cambio se guarda en la base de datos.
  */
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { enviarAporte as guardarAporte, getCandidato, guardarCampana, useDatos } from '@/data/repo';
+import * as remoto from '@/data/remoto';
+import { asistir, enviarAporte as guardarAporte, getCandidato, guardarCampana, seguir, useDatos } from '@/data/repo';
 import type {
   Candidato, Cargo, Ciudadano, Etapa, ModoUso, TipoAporte, TipoAval, TipoLista, Tema,
 } from '@/data/types';
@@ -27,7 +29,13 @@ export interface BorradorCandidatura {
   modo?: ModoUso;
 }
 
+/** Con Supabase, la app espera a cargar los datos antes de mostrarse. */
+export type Carga = { estado: 'cargando' } | { estado: 'lista' } | { estado: 'error'; mensaje: string };
+
 interface AppState {
+  carga: Carga;
+  reintentarCarga: () => void;
+
   ciudadano: Ciudadano | null;
   registrarCiudadano: (c: Omit<Ciudadano, 'siguiendo' | 'asistire'>) => void;
   alternarSeguir: (candidatoId: string) => void;
@@ -54,31 +62,66 @@ const AppContext = createContext<AppState | null>(null);
 const BORRADOR_VACIO: BorradorCandidatura = { partidos: [] };
 const CAMPANA_DEMO = 'k1';
 
+/** Datos de una campaña existente en el formato del registro paso a paso. */
+function borradorDe(c: Candidato): BorradorCandidatura {
+  return {
+    etapa: c.etapa, cargo: c.cargo, departamento: c.departamento, municipio: c.municipio,
+    tipoAval: c.tipoAval, partidos: c.partidos, grupoSignificativo: c.grupoSignificativo,
+    tipoLista: c.tipoLista, numero: c.numero ? String(c.numero) : undefined,
+    nombre: c.nombre, usuario: c.usuario, modo: c.modo ?? 'campana_completa',
+  };
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [ciudadano, setCiudadano] = useState<Ciudadano | null>(null);
-  const [misAportes, setMisAportes] = useState<string[]>(['a1', 'a2']);
+  // Sin Supabase, el ciudadano de prueba ya escribió los aportes a1 y a2.
+  const [misAportes, setMisAportes] = useState<string[]>(remoto.conectado ? [] : ['a1', 'a2']);
   const [borrador, setBorrador] = useState<BorradorCandidatura>(BORRADOR_VACIO);
   const [candidatura, setCandidatura] = useState<BorradorCandidatura | null>(null);
   const [campanaId, setCampanaId] = useState<string | null>(null);
+  const [carga, setCarga] = useState<Carga>({ estado: remoto.conectado ? 'cargando' : 'lista' });
+
+  const cargar = useCallback(() => {
+    if (!remoto.conectado) return;
+    setCarga({ estado: 'cargando' });
+    remoto
+      .cargarTodo()
+      .then((sesion) => {
+        setCiudadano(sesion.ciudadano);
+        setMisAportes(sesion.misAportes);
+        if (sesion.campana) {
+          setCampanaId(sesion.campana.id);
+          setCandidatura(borradorDe(sesion.campana));
+        }
+        setCarga({ estado: 'lista' });
+      })
+      .catch((e: unknown) => setCarga({ estado: 'error', mensaje: e instanceof Error ? e.message : String(e) }));
+  }, []);
+
+  useEffect(cargar, [cargar]);
 
   const value = useMemo<AppState>(
     () => ({
+      carga,
+      reintentarCarga: cargar,
+
       ciudadano,
-      registrarCiudadano: (c) => setCiudadano({ ...c, siguiendo: [], asistire: [] }),
-      alternarSeguir: (id) =>
-        setCiudadano((prev) =>
-          prev && {
-            ...prev,
-            siguiendo: prev.siguiendo.includes(id) ? prev.siguiendo.filter((x) => x !== id) : [...prev.siguiendo, id],
-          },
-        ),
-      alternarAsistire: (id) =>
-        setCiudadano((prev) =>
-          prev && {
-            ...prev,
-            asistire: prev.asistire.includes(id) ? prev.asistire.filter((x) => x !== id) : [...prev.asistire, id],
-          },
-        ),
+      registrarCiudadano: (c) => {
+        setCiudadano({ ...c, siguiendo: [], asistire: [] });
+        remoto.guardarPerfilCiudadano(c);
+      },
+      alternarSeguir: (id) => {
+        if (!ciudadano) return;
+        const si = !ciudadano.siguiendo.includes(id);
+        setCiudadano({ ...ciudadano, siguiendo: si ? [...ciudadano.siguiendo, id] : ciudadano.siguiendo.filter((x) => x !== id) });
+        seguir(id, si);
+      },
+      alternarAsistire: (id) => {
+        if (!ciudadano) return;
+        const si = !ciudadano.asistire.includes(id);
+        setCiudadano({ ...ciudadano, asistire: si ? [...ciudadano.asistire, id] : ciudadano.asistire.filter((x) => x !== id) });
+        asistir(id, si);
+      },
 
       misAportes,
       enviarAporte: (a) => {
@@ -119,15 +162,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const c = getCandidato(CAMPANA_DEMO);
         if (!c) return;
         setCampanaId(c.id);
-        setCandidatura({
-          etapa: c.etapa, cargo: c.cargo, departamento: c.departamento, municipio: c.municipio,
-          tipoAval: c.tipoAval, partidos: c.partidos, grupoSignificativo: c.grupoSignificativo,
-          tipoLista: c.tipoLista, numero: c.numero ? String(c.numero) : undefined,
-          nombre: c.nombre, usuario: c.usuario, modo: c.modo ?? 'campana_completa',
-        });
+        setCandidatura(borradorDe(c));
       },
     }),
-    [ciudadano, misAportes, borrador, candidatura, campanaId],
+    [carga, cargar, ciudadano, misAportes, borrador, candidatura, campanaId],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
