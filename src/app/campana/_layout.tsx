@@ -1,12 +1,12 @@
 import { Image } from 'expo-image';
 import { router, Stack, usePathname, type Href } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/Texto';
 import { Ionicons, type IconName } from '@/components/ui';
 import { useMiCampana } from '@/state/app';
-import { colors, radius } from '@/theme';
+import { colors, radius, estilos } from '@/theme';
 
 /** Desde este ancho (computador o tableta horizontal) se muestra la barra lateral. */
 const ANCHO_SIDEBAR = 900;
@@ -94,7 +94,7 @@ function Sidebar() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   fila: { flex: 1, flexDirection: 'row', backgroundColor: colors.background },
   contenido: { flex: 1 },
   sidebar: { width: 260, backgroundColor: colors.night },
@@ -105,4 +105,4 @@ const s = StyleSheet.create({
   itemActivo: { backgroundColor: colors.primary },
   itemPresionado: { backgroundColor: colors.nightSoft },
   itemTexto: { fontSize: 15, fontWeight: '500', color: colors.onNightMuted },
-});
+}));

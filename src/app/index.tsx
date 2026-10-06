@@ -1,15 +1,16 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BotonTema } from '@/components/SelectorTema';
 import { Ionicons, type IconName } from '@/components/ui';
 import { APP_NAME } from '@/config';
 import { conectado } from '@/data/remoto';
 import { ROLES } from '@/components/equipo';
 import { getCandidato } from '@/data/repo';
 import { useApp, useMiMiembro } from '@/state/app';
-import { colors, radius, shadow, type } from '@/theme';
+import { type, colors, radius, shadow, esOscuro, estilos } from '@/theme';
 import { Text } from '@/components/Texto';
 
 /** Bienvenida: cada tipo de usuario elige por dónde entrar. */
@@ -19,8 +20,11 @@ export default function Bienvenida() {
 
   return (
     <SafeAreaView style={s.root}>
+      <View style={s.arriba}>
+        <BotonTema />
+      </View>
       <View style={s.hero}>
-        <Image source={require('@/../assets/images/logo-nexo.png')} style={s.logo} contentFit="contain" accessibilityLabel={APP_NAME} />
+        <Image source={esOscuro() ? require('@/../assets/images/logo-nexo-blanco.png') : require('@/../assets/images/logo-nexo.png')} style={s.logo} contentFit="contain" accessibilityLabel={APP_NAME} />
         <Text style={s.tagline}>Construyamos</Text>
       </View>
 
@@ -87,7 +91,8 @@ function Entrada({ icon, title, text, onPress, acento }: { icon: IconName; title
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
+  arriba: { position: 'absolute', top: 12, right: 16, zIndex: 1 },
   root: { flex: 1, backgroundColor: colors.background, justifyContent: 'space-between', padding: 24 },
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   logo: { width: 180, height: 44 },
@@ -97,4 +102,4 @@ const s = StyleSheet.create({
   demo: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   demoText: { fontSize: 14, fontWeight: '600', color: colors.primary },
   entradaIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primaryTint, alignItems: 'center', justifyContent: 'center' },
-});
+}));

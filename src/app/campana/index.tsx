@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, useWindowDimensions, View } from 'react-native';
 
 import { Button, Card, Ionicons, Notice, Row, Screen, Small, Title, type IconName } from '@/components/ui';
 import { CARGOS, nombreDepartamento, nombreMunicipio, nombrePartido } from '@/data/catalogos';
@@ -9,7 +9,7 @@ import { FotoPerfil } from '@/components/FotoPerfil';
 import { agendaDe, agendaDelDia, aportesDeCampana, compromisosDe, miembrosDe, ponerFotoCampana, propuestasDeCampana, solicitudesDe } from '@/data/repo';
 import { diaRelativo, fechaLarga, horaTexto } from '@/lib/fechas';
 import { useApp, useMiCampana } from '@/state/app';
-import { colors, radius, shadow } from '@/theme';
+import { colors, radius, shadow, estilos } from '@/theme';
 import { Text } from '@/components/Texto';
 
 interface Herramienta {
@@ -230,7 +230,7 @@ function Stat({ n, label, nuevo }: { n: number; label: string; nuevo?: number })
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   hero: { backgroundColor: colors.night, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 },
   ancho: { width: '100%', maxWidth: 760, alignSelf: 'center', gap: 10 },
   cuerpo: { padding: 20, paddingBottom: 32, gap: 16 },
@@ -257,4 +257,4 @@ const s = StyleSheet.create({
   toolLocked: { backgroundColor: colors.background, boxShadow: 'none' },
   toolTitle: { fontSize: 15, fontWeight: '600', color: colors.ink, marginTop: 4 },
   toolText: { fontSize: 13, color: colors.muted },
-});
+}));

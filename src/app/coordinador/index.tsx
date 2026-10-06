@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { CabeceraEquipo, DatoOscuro } from '@/components/equipo';
 import { Text } from '@/components/Texto';
@@ -8,7 +8,7 @@ import { agendaDe, colaboradoresDe, enZona, getCandidato, miembrosDe, solicitude
 import type { Tarea } from '@/data/types';
 import { hace } from '@/lib/fechas';
 import { useMiMiembro } from '@/state/app';
-import { colors, radius, shadow, type } from '@/theme';
+import { type, colors, radius, shadow, estilos } from '@/theme';
 
 const SEMANA = 7 * 86400_000;
 
@@ -126,7 +126,7 @@ function Dato({ n, label }: { n: number; label: string }) {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   campana: { fontSize: 14, color: colors.onNightMuted },
   datos: { flexDirection: 'row', gap: 8 },
   cuerpo: { width: '100%', maxWidth: 760, alignSelf: 'center', padding: 20, paddingBottom: 32, gap: 16 },
@@ -140,4 +140,4 @@ const s = StyleSheet.create({
   alertaTitulo: { fontSize: 15, fontWeight: '600', color: colors.ink },
   dato: { flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: 12, gap: 2 },
   datoN: { fontSize: 22, fontWeight: '700', color: colors.ink },
-});
+}));

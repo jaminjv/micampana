@@ -1,16 +1,17 @@
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CandidatoRow } from '@/components/cards';
 import { FotoPerfil } from '@/components/FotoPerfil';
+import { SelectorTema } from '@/components/SelectorTema';
 import { Badge, Button, Card, Small } from '@/components/ui';
 import { nombreMunicipio } from '@/data/catalogos';
 import { getAporte, getCandidato, getEvento, useDatos } from '@/data/repo';
 import type { EstadoAporte, TipoAporte } from '@/data/types';
 import { diaCorto, hace, horaTexto } from '@/lib/fechas';
 import { useApp } from '@/state/app';
-import { colors } from '@/theme';
+import { colors, estilos } from '@/theme';
 import { Text } from '@/components/Texto';
 
 const ESTADO: Record<EstadoAporte, { label: string; tone: 'ok' | 'primary' | 'neutral' }> = {
@@ -83,6 +84,7 @@ export default function Actividad() {
           return c ? <CandidatoRow key={id} c={c} /> : null;
         })}
 
+        <Card><SelectorTema /></Card>
         <Button label="Tu cuenta y tu celular" variant="secondary" icon="phone-portrait-outline" onPress={() => router.push('/cuenta')} />
         <Small>Consultar, corregir o borrar tus datos: próximamente.</Small>
         <Button label="Salir al inicio" variant="secondary" onPress={() => router.replace('/')} />
@@ -91,7 +93,7 @@ export default function Actividad() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   perfil: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   root: { flex: 1, backgroundColor: colors.background },
   content: { padding: 20, gap: 12 },
@@ -105,4 +107,4 @@ const s = StyleSheet.create({
   fecha: { width: 44, alignItems: 'center' },
   fechaDia: { fontSize: 11, fontWeight: '700', color: colors.primary },
   fechaNum: { fontSize: 20, fontWeight: '800', color: colors.ink },
-});
+}));

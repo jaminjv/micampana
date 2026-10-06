@@ -1,9 +1,9 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { ArchivoLocal } from '@/data/types';
-import { colors, radius, type } from '@/theme';
+import { type, colors, radius, estilos } from '@/theme';
 import { Text } from './Texto';
 import { Button, Ionicons, Small } from './ui';
 
@@ -65,7 +65,7 @@ export function SubirSoporte({ value, onChange, yaEnviado }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   archivo: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingLeft: 14, paddingVertical: 4, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   nombre: { fontSize: 15, fontWeight: '600', color: colors.ink },
-});
+}));

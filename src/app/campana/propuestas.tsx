@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Badge, Button, Card, Ionicons, Notice, Row, Screen, Small, TopBar } from '@/components/ui';
 import { CARGOS } from '@/data/catalogos';
@@ -7,7 +7,7 @@ import { propuestasDeCampana, territoriosSinPropuesta } from '@/data/repo';
 import type { Propuesta } from '@/data/types';
 import { fechaCorta } from '@/lib/fechas';
 import { useMiCampana } from '@/state/app';
-import { colors, radius } from '@/theme';
+import { colors, radius, estilos } from '@/theme';
 import { Text } from '@/components/Texto';
 
 /** Mis propuestas: borradores por publicar y propuestas publicadas (permanentes). */
@@ -127,7 +127,7 @@ function FilaPublicada({ p, ultima }: { p: Propuesta; ultima: boolean }) {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   nueva: { height: 40, paddingHorizontal: 14, marginRight: 8, borderRadius: radius.md, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', gap: 4 },
   nuevaText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
   stats: { flexDirection: 'row', gap: 8 },
@@ -143,4 +143,4 @@ const s = StyleSheet.create({
   meta: { fontSize: 13, color: colors.muted, lineHeight: 18 },
   editada: { color: colors.warnFg, fontWeight: '600' },
   retirada: { color: colors.inkSoft, fontWeight: '600' },
-});
+}));

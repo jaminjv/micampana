@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Share, StyleSheet, View } from 'react-native';
+import { Share, View } from 'react-native';
 
 import { Text } from '@/components/Texto';
 import { Button, Card, CheckRow, Chip, ChipRow, Notice, Screen, Small, Title, TopBar } from '@/components/ui';
@@ -9,7 +9,7 @@ import { crearInvitacion, getCandidato, invitacionesDe, miembrosDe } from '@/dat
 import type { Alcance, Invitacion } from '@/data/types';
 import { fechaCorta } from '@/lib/fechas';
 import { useMiCampana, useMiMiembro } from '@/state/app';
-import { colors, radius, type } from '@/theme';
+import { type, colors, radius, estilos } from '@/theme';
 
 /** Un aspirante puede tener hasta 3 coordinadores (equipo inicial). */
 const MAX_COORDINADORES_ASPIRANTE = 3;
@@ -132,7 +132,7 @@ export default function Invitar() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   codigoCaja: { alignItems: 'center', gap: 8, paddingVertical: 24, borderRadius: radius.xl },
   codigo: { fontSize: 40, fontWeight: '700', letterSpacing: 4, color: colors.ink },
-});
+}));

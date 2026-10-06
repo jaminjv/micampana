@@ -3,11 +3,11 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import type { ComponentProps, ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
-import { colors, radius, shadow, space, TOUCH, type } from '@/theme';
+import { colors, esOscuro, estilos, radius, shadow, space, TOUCH, type } from '@/theme';
 import { Text, TextInput } from './Texto';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
@@ -31,7 +31,7 @@ export function Screen({ children, footer, header, background = colors.backgroun
   const contenido = padded ? styles.screenPad : undefined;
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: oscura ? colors.night : background }]} edges={['top', 'left', 'right']}>
-      <StatusBar style={oscura ? 'light' : 'dark'} />
+      <StatusBar style={oscura || esOscuro() ? 'light' : 'dark'} />
       {header}
       <View style={[styles.flex, { backgroundColor: background }]}>
         {scroll ? (
@@ -253,17 +253,18 @@ export const Card = ({ children, style }: { children: ReactNode; style?: StylePr
 );
 
 type Tono = 'primary' | 'accent' | 'ok' | 'warn' | 'danger' | 'neutral';
-const TONOS: Record<Tono, [string, string]> = {
+/** Fondo y texto de cada tono; es función para que siga el tema activo. */
+const tonos = (): Record<Tono, [string, string]> => ({
   primary: [colors.primaryTint, colors.primaryOnTint],
   accent: [colors.accentTint, colors.accentOnTint],
   ok: [colors.okBg, colors.okFg],
   warn: [colors.warnBg, colors.warnFg],
   danger: [colors.dangerBg, colors.dangerFg],
   neutral: [colors.segmented, colors.inkSoft],
-};
+});
 
 export function Badge({ label, tone = 'primary' }: { label: string; tone?: Tono }) {
-  const [bg, fg] = TONOS[tone];
+  const [bg, fg] = tonos()[tone];
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
       <Text style={[styles.badgeText, { color: fg }]}>{label}</Text>
@@ -272,7 +273,7 @@ export function Badge({ label, tone = 'primary' }: { label: string; tone?: Tono 
 }
 
 export function Notice({ icon, children, tone = 'warn' }: { icon: IconName; children: ReactNode; tone?: Tono }) {
-  const [bg, fg] = TONOS[tone];
+  const [bg, fg] = tonos()[tone];
   return (
     <View style={[styles.notice, { backgroundColor: bg }]}>
       <Ionicons name={icon} size={18} color={fg} />
@@ -303,7 +304,7 @@ export const Row = ({ children, gap = 8, style }: { children: ReactNode; gap?: n
   <View style={[{ flexDirection: 'row', alignItems: 'center', gap }, style]}>{children}</View>
 );
 
-export const styles = StyleSheet.create({
+export const styles = estilos(() => ({
   flex: { flex: 1 },
   gap4: { gap: 4 },
   gap6: { gap: 6 },
@@ -351,4 +352,4 @@ export const styles = StyleSheet.create({
   badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
   badgeText: { fontSize: 12, fontWeight: '600' },
   notice: { flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: radius.md },
-});
+}));

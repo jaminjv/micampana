@@ -1,10 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { alFallar } from '@/data/remoto';
 import { useApp } from '@/state/app';
-import { colors, radius } from '@/theme';
+import { colors, radius, estilos } from '@/theme';
 import { Button, Ionicons } from './ui';
 import { Text } from './Texto';
 
@@ -49,11 +49,11 @@ export function AvisoGuardado() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.background },
   titulo: { fontSize: 20, fontWeight: '700', color: colors.ink },
   texto: { fontSize: 15, lineHeight: 21, color: colors.inkSoft, textAlign: 'center' },
   aviso: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 12 },
   caja: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.md, backgroundColor: colors.dangerBg, marginBottom: 72 },
   avisoTexto: { flex: 1, fontSize: 14, lineHeight: 19, color: colors.dangerFg, fontWeight: '600' },
-});
+}));

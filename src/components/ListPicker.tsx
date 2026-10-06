@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
-import { colors, radius, TOUCH, type } from '@/theme';
+import { type, colors, TOUCH, radius, estilos } from '@/theme';
 import { Ionicons } from './ui';
 import { Text, TextInput } from './Texto';
 
@@ -74,7 +74,7 @@ export function ListPicker({ items, selected, onToggle, multiple, searchPlacehol
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   search: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, borderRadius: radius.md, borderWidth: 1, borderColor: colors.inputBorder, paddingHorizontal: 14, backgroundColor: colors.surface },
   searchInput: { flex: 1, fontSize: 16, color: colors.ink, paddingVertical: 10 },
   list: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface, overflow: 'hidden' },
@@ -85,4 +85,4 @@ const s = StyleSheet.create({
   radioOn: { borderWidth: 7, borderColor: colors.primary },
   check: { width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: colors.faint, alignItems: 'center', justifyContent: 'center' },
   checkOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-});
+}));

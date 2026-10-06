@@ -1,11 +1,11 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { ListPicker } from '@/components/ListPicker';
 import { Body, Button, Card, CheckRow, H2, Notice, Progress, Screen, Small, Title, TopBar } from '@/components/ui';
 import { CARGOS, DEPARTAMENTOS, municipiosDe, nombreMunicipio } from '@/data/catalogos';
 import { useApp } from '@/state/app';
 import { posicion, siguiente } from '@/state/pasos';
-import { colors } from '@/theme';
+import { colors, estilos } from '@/theme';
 import { Text } from '@/components/Texto';
 
 /**
@@ -109,7 +109,7 @@ function Nivel({ n, titulo, texto }: { n: number; titulo: string; texto: string 
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   munRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
   munText: { fontSize: 15, color: colors.ink },
   capital: { fontSize: 12, fontWeight: '600', color: colors.primary },
@@ -117,4 +117,4 @@ const s = StyleSheet.create({
   nivel: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   nivelNum: { width: 28, height: 28, borderRadius: 8, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   nivelNumText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
-});
+}));

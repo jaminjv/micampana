@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { CompromisoCard } from '@/components/agenda';
 import { Text } from '@/components/Texto';
@@ -9,7 +9,7 @@ import { ESTADOS_COMPROMISO } from '@/data/catalogos';
 import { compromisosDe } from '@/data/repo';
 import type { EstadoCompromiso } from '@/data/types';
 import { useMiCampana } from '@/state/app';
-import { colors, radius } from '@/theme';
+import { colors, radius, estilos } from '@/theme';
 
 /** Compromisos con comunidades: lo que la campaña se comprometió a impulsar, y en qué va. */
 export default function Compromisos() {
@@ -63,10 +63,10 @@ export default function Compromisos() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   stats: { flexDirection: 'row', gap: 8 },
   stat: { flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: 12, gap: 2 },
   statN: { fontSize: 22, fontWeight: '700', color: colors.ink },
   statL: { fontSize: 13, color: colors.muted },
   h3: { fontSize: 16, fontWeight: '700', color: colors.ink },
-});
+}));

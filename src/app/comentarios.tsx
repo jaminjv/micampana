@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, View } from 'react-native';
 
 import { PostCard } from '@/components/cards';
 import { ComentarioFila } from '@/components/comentarios';
@@ -9,7 +9,7 @@ import { Body, Button, Card, Notice, Screen, Small, TopBar } from '@/components/
 import { nombreMunicipio, nombreZona } from '@/data/catalogos';
 import { comentar, comentariosDe, getCandidato, getPublicacion, MAX_COMENTARIO, useDatos } from '@/data/repo';
 import { useApp, useMiCampana } from '@/state/app';
-import { colors, radius } from '@/theme';
+import { colors, radius, estilos } from '@/theme';
 
 /**
  * Comentarios de una publicación del feed. El ciudadano comenta con su nombre
@@ -107,11 +107,11 @@ export default function Comentarios() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   escribir: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   input: {
     flex: 1, minHeight: 44, maxHeight: 120, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.ink,
     borderWidth: 1, borderColor: colors.inputBorder, borderRadius: radius.md, backgroundColor: colors.surface,
   },
   separador: { borderTopWidth: 1, borderTopColor: colors.divider },
-});
+}));

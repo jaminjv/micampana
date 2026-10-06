@@ -1,9 +1,9 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, View } from 'react-native';
 
 import type { ArchivoLocal } from '@/data/types';
-import { colors, radius, shadow } from '@/theme';
+import { colors, radius, shadow, estilos } from '@/theme';
 import { Text } from './Texto';
 import { Avatar, Button, Ionicons, Small } from './ui';
 
@@ -85,7 +85,7 @@ export function FotoPerfil({
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   insignia: {
     position: 'absolute', right: -2, bottom: -2, width: 28, height: 28, borderRadius: 14, borderWidth: 2,
     backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
@@ -96,4 +96,4 @@ const s = StyleSheet.create({
     borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, ...shadow.md,
   },
   titulo: { fontSize: 18, fontWeight: '700', color: colors.ink },
-});
+}));

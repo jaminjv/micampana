@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, radius } from '@/theme';
+import { colors, radius, estilos } from '@/theme';
 import { Button, CheckRow, Ionicons, type IconName } from './ui';
 import { Text } from './Texto';
 
@@ -81,7 +81,7 @@ function Regla({ icon, color, children }: { icon: IconName; color: string; child
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   fondo: { flex: 1, backgroundColor: 'rgba(20,24,31,0.55)' },
   hoja: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 16, gap: 18 },
   asa: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: colors.inputBorder },
@@ -92,4 +92,4 @@ const s = StyleSheet.create({
   regla: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   reglaTexto: { flex: 1, fontSize: 14, lineHeight: 20, color: colors.ink },
   check: { fontSize: 14, lineHeight: 20, fontWeight: '600', color: colors.ink },
-});
+}));

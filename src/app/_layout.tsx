@@ -9,7 +9,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AvisoGuardado, EsperarCarga } from '@/components/EstadoConexion';
 import { AppProvider } from '@/state/app';
-import { colors } from '@/theme';
+import { TemaProvider } from '@/state/tema';
+import { colors, esOscuro } from '@/theme';
 
 // La pantalla de inicio se queda hasta que carga la tipografía de la marca.
 SplashScreen.preventAutoHideAsync();
@@ -27,11 +28,13 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AppProvider>
-        <StatusBar style="dark" />
-        <EsperarCarga>
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
-          <AvisoGuardado />
-        </EsperarCarga>
+        <TemaProvider>
+          <StatusBar style={esOscuro() ? 'light' : 'dark'} />
+          <EsperarCarga>
+            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
+            <AvisoGuardado />
+          </EsperarCarga>
+        </TemaProvider>
       </AppProvider>
     </SafeAreaProvider>
   );

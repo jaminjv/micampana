@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { fechaCompleta, SelectorFecha } from '@/components/SelectorFecha';
 import { Text } from '@/components/Texto';
@@ -8,7 +8,7 @@ import { Button, Chip, ChipRow, Field, Notice, Row, Screen, Small, TopBar } from
 import { TEMAS } from '@/data/catalogos';
 import { getMiembro, proponerVisita } from '@/data/repo';
 import { useMiMiembro } from '@/state/app';
-import { colors, radius, type } from '@/theme';
+import { type, colors, radius, estilos } from '@/theme';
 
 /** Proponer una visita del candidato a la comunidad. */
 export default function Proponer() {
@@ -88,11 +88,11 @@ function Paso({ n, texto, activo }: { n: number; texto: string; activo?: boolean
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   pasos: { flexWrap: 'wrap' },
   paso: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.background },
   pasoActivo: { backgroundColor: colors.primary },
   pasoN: { fontSize: 12, fontWeight: '700', color: colors.primary },
   pasoTexto: { fontSize: 12, fontWeight: '600', color: colors.inkSoft },
   flecha: { color: colors.faint },
-});
+}));

@@ -6,7 +6,7 @@ import { CARGOS } from '@/data/catalogos';
 import { cargoConTerritorio, getCandidato, getEvento, getPropuesta, textoAval } from '@/data/repo';
 import type { Candidato, Propuesta, Publicacion } from '@/data/types';
 import { diaCorto, fechaCorta, hace, horaTexto } from '@/lib/fechas';
-import { colors, radius, shadow } from '@/theme';
+import { colors, radius, shadow, estilos } from '@/theme';
 import { BarraReacciones, ComentariosRecientes } from './comentarios';
 import { Avatar, Badge, Button, Ionicons, Row, VerifiedMark } from './ui';
 import { Text } from './Texto';
@@ -174,7 +174,7 @@ function PropuestaBody({ id }: { id: string }) {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   candRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   candCard: { padding: 16, ...shadow.sm, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   candName: { fontSize: 16, fontWeight: '600', color: colors.ink, flexShrink: 1 },
@@ -197,4 +197,4 @@ const s = StyleSheet.create({
   fechaDia: { fontSize: 11, fontWeight: '700', color: colors.primary },
   fechaNum: { fontSize: 20, fontWeight: '800', color: colors.ink },
   eventoTitle: { fontSize: 15, fontWeight: '600', color: colors.ink },
-});
+}));

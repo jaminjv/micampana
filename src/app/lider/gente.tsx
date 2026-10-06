@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { FotoPrivada } from '@/components/equipo';
 import { Text } from '@/components/Texto';
@@ -8,7 +8,7 @@ import { Badge, Button, Card, Chip, ChipRow, Row, Screen, Small, TopBar } from '
 import { colaboradoresDe, cupoDe } from '@/data/repo';
 import type { EstadoColaborador } from '@/data/types';
 import { useMiMiembro } from '@/state/app';
-import { colors, radius, shadow, type } from '@/theme';
+import { type, colors, radius, shadow, estilos } from '@/theme';
 
 /** Mi gente: los colaboradores que registró el líder, con su cupo. */
 export default function MiGente() {
@@ -69,11 +69,11 @@ export default function MiGente() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   cupo: { fontSize: 28, fontWeight: '700', color: colors.ink },
   cupoTotal: { fontSize: 15, fontWeight: '500', color: colors.muted },
   barra: { height: 8, borderRadius: 4, backgroundColor: colors.segmented, overflow: 'hidden' },
   relleno: { height: 8, borderRadius: 4, backgroundColor: colors.primary },
   fila: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, ...shadow.sm },
   nombre: { fontSize: 16, fontWeight: '600', color: colors.ink },
-});
+}));

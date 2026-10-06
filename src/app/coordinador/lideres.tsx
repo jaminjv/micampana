@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Text } from '@/components/Texto';
 import { Avatar, Badge, Button, Card, Ionicons, Row, Screen, Small, TopBar } from '@/components/ui';
 import { colaboradoresDe, cupoDe, invitacionesDe, miembrosDe, tareasDe, vencida } from '@/data/repo';
 import { fechaCorta } from '@/lib/fechas';
 import { useMiMiembro } from '@/state/app';
-import { colors, radius, shadow, type } from '@/theme';
+import { type, colors, radius, shadow, estilos } from '@/theme';
 
 /** Los líderes comunales a cargo del coordinador, con su cupo y sus tareas. */
 export default function Lideres() {
@@ -66,8 +66,8 @@ export default function Lideres() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   fila: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, ...shadow.sm },
   nombre: { fontSize: 16, fontWeight: '600', color: colors.ink },
   codigo: { fontSize: 18, fontWeight: '700', color: colors.ink, letterSpacing: 1 },
-});
+}));

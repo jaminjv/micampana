@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PostCard } from '@/components/cards';
@@ -9,7 +9,7 @@ import { APP_NAME } from '@/config';
 import { nombreMunicipio, nombreZona } from '@/data/catalogos';
 import { feedPara, useDatos, type FiltroFeed } from '@/data/repo';
 import { useApp } from '@/state/app';
-import { colors } from '@/theme';
+import { colors, esOscuro, estilos } from '@/theme';
 import { Text } from '@/components/Texto';
 
 const FILTROS: { value: FiltroFeed; label: string }[] = [
@@ -32,7 +32,7 @@ export default function Feed() {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <View style={s.header}>
-        <Image source={require('@/../assets/images/logo-nexo.png')} style={s.logo} contentFit="contain" accessibilityLabel={APP_NAME} />
+        <Image source={esOscuro() ? require('@/../assets/images/logo-nexo-blanco.png') : require('@/../assets/images/logo-nexo.png')} style={s.logo} contentFit="contain" accessibilityLabel={APP_NAME} />
         <Small>{lugar}</Small>
         <View style={s.filtros}>
           {FILTROS.map((f) => (
@@ -67,7 +67,7 @@ export default function Feed() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   root: { flex: 1, backgroundColor: colors.background },
   header: { backgroundColor: colors.surface, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, gap: 4, borderBottomWidth: 1, borderBottomColor: colors.border },
   logo: { width: 96, height: 24 },
@@ -76,4 +76,4 @@ const s = StyleSheet.create({
   empty: { alignItems: 'center', gap: 6, padding: 32 },
   emptyTitle: { fontSize: 16, fontWeight: '600', color: colors.ink, textAlign: 'center' },
   footer: { textAlign: 'center', paddingVertical: 12 },
-});
+}));

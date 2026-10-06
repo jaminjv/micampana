@@ -1,11 +1,11 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CandidatoRow } from '@/components/cards';
 import { Small } from '@/components/ui';
 import { buscarCandidatos } from '@/data/repo';
 import { useApp } from '@/state/app';
-import { colors } from '@/theme';
+import { colors, estilos } from '@/theme';
 import { Text } from '@/components/Texto';
 
 /** Elegir a qué candidato escribirle. Primero los que sigue, luego los de su región. */
@@ -34,9 +34,9 @@ export default function Aportar() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   root: { flex: 1, backgroundColor: colors.background },
   content: { padding: 20, gap: 12 },
   title: { fontSize: 26, fontWeight: '700', color: colors.ink },
   label: { fontSize: 15, fontWeight: '700', color: colors.ink, marginTop: 8 },
-});
+}));

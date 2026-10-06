@@ -22,6 +22,7 @@ El nombre se cambia en `src/config.ts` y `app.json`. La identidad visual (colore
 | Equipo de campaña: códigos de invitación (coordinador y líder comunal, con territorio y funciones delegadas), coordinador (aprobar colaboradores, validar visitas, asignar tareas), líder (registrar colaboradores con foto y cédula, cupo, reportar tareas con foto de evidencia, proponer visitas) y vista Equipo del candidato | Hecho y probado con PostgREST local |
 | Reacciones (manito arriba y abajo) y comentarios en las publicaciones del feed; el candidato ve los totales en Publicaciones, responde como campaña y puede ocultar comentarios ofensivos | Hecho y probado con PostgREST local |
 | Fotos de perfil (tomarla o elegirla de la galería): ciudadano en Mi actividad, candidato en su panel, coordinador y líder en su inicio; se ven en el feed, el perfil, los comentarios y el equipo | Hecho y probado con PostgREST local |
+| Apariencia clara u oscura en toda la app (como el teléfono, clara u oscura): botón de sol/luna en la bienvenida y selector en Tu cuenta y en Mi actividad; se recuerda en el teléfono | Hecho |
 | Versión de marketing | Pendiente |
 | Agenda del candidato (hoy, próximas y pasadas; visitas con asistencia y notas; aviso de cruces; publicar como evento) y compromisos con comunidades (desde visitas o aportes, estados, convertir en propuesta) | Hecho |
 | Sondeos y marketing (lado candidato) | Pendiente |

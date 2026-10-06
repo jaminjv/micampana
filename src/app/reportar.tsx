@@ -9,7 +9,7 @@ import { Button, Chip, ChipRow, Field, Ionicons, Notice, Screen, Small, TopBar }
 import { colaboradoresDe, getMiembro, getTarea, reportarTarea } from '@/data/repo';
 import type { ArchivoLocal } from '@/data/types';
 import { useMiMiembro } from '@/state/app';
-import { colors, radius, type } from '@/theme';
+import { type, colors, radius, estilos } from '@/theme';
 
 const MAX_FOTOS = 3;
 
@@ -114,10 +114,10 @@ export default function Reportar() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   fotos: { flexDirection: 'row', gap: 8 },
   foto: { flex: 1, maxWidth: 120, height: 104, borderRadius: radius.md, overflow: 'hidden', backgroundColor: colors.placeholder },
   tomar: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', gap: 6 },
   tomarTexto: { fontSize: 13, fontWeight: '600', color: colors.primary },
   quitar: { position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(15,23,42,0.7)', alignItems: 'center', justifyContent: 'center' },
-});
+}));

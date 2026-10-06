@@ -1,12 +1,12 @@
 import { useLocalSearchParams } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Avatar, Body, Button, Card, Field, Progress, Screen, Segmented, Small, Title, TopBar } from '@/components/ui';
 import { CARGOS, nombreDepartamento, nombreMunicipio } from '@/data/catalogos';
 import type { TipoLista } from '@/data/types';
 import { useApp } from '@/state/app';
 import { posicion, siguiente } from '@/state/pasos';
-import { colors } from '@/theme';
+import { colors, estilos } from '@/theme';
 import { Text } from '@/components/Texto';
 
 /** Asamblea y Concejo: tipo de lista y número del candidato en el tarjetón. */
@@ -84,11 +84,11 @@ export default function Lista() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   label: { fontSize: 15, fontWeight: '600', color: colors.ink },
   preTitle: { fontSize: 12, fontWeight: '700', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.6 },
   preview: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   numBox: { width: 52, height: 52, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   numLabel: { color: '#FFFFFF', fontSize: 10, fontWeight: '600' },
   num: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', lineHeight: 24 },
-});
+}));

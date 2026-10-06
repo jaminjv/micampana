@@ -1,13 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { ROLES } from '@/components/equipo';
 import { Text } from '@/components/Texto';
 import { Avatar, Body, Button, Field, Notice, Row, Screen, Small, Title, TopBar } from '@/components/ui';
 import { verInvitacion, type ResumenInvitacion } from '@/data/repo';
 import { useApp, useMiMiembro } from '@/state/app';
-import { colors, radius } from '@/theme';
+import { colors, radius, estilos } from '@/theme';
 
 /** Entrar al equipo de una campaña con el código que trae el rol, el territorio y las funciones. */
 export default function Invitacion() {
@@ -129,9 +129,9 @@ function Fila({ k, v }: { k: string; v: string }) {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   resumen: { gap: 12, padding: 18, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background },
   nombre: { fontSize: 17, fontWeight: '700', color: colors.ink },
   linea: { height: 1, backgroundColor: colors.border },
   valor: { flexShrink: 1, textAlign: 'right', fontSize: 14, fontWeight: '600', color: colors.ink },
-});
+}));

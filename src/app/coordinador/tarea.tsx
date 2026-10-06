@@ -1,13 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { fechaCompleta, SelectorFecha } from '@/components/SelectorFecha';
 import { Text } from '@/components/Texto';
 import { Button, Card, CheckRow, Chip, ChipRow, Field, Notice, Screen, Small, TopBar } from '@/components/ui';
 import { asignarTarea, colaboradoresDe, miembrosDe } from '@/data/repo';
 import { useMiMiembro } from '@/state/app';
-import { colors, radius, type } from '@/theme';
+import { type, colors, radius, estilos } from '@/theme';
 
 const SUGERIDAS = ['Volanteo', 'Puerta a puerta', 'Perifoneo', 'Logística de evento', 'Convocar a la visita'];
 
@@ -95,8 +95,8 @@ export default function NuevaTarea() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   lista: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, overflow: 'hidden' },
   item: { paddingHorizontal: 14, paddingVertical: 6 },
   borde: { borderBottomWidth: 1, borderBottomColor: colors.divider },
-});
+}));

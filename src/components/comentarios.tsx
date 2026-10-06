@@ -1,10 +1,10 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { borrarComentario, comentariosDe, ocultarComentario, reaccionar, reaccionesDe } from '@/data/repo';
 import type { Comentario } from '@/data/types';
 import { hace } from '@/lib/fechas';
-import { colors, radius } from '@/theme';
+import { colors, radius, estilos } from '@/theme';
 import { Text } from './Texto';
 import { Avatar, Ionicons, type IconName } from './ui';
 
@@ -113,7 +113,7 @@ const Accion = ({ label, onPress }: { label: string; onPress: () => void }) => (
   </Pressable>
 );
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   barra: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border },
   boton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill },
   n: { fontSize: 14, fontWeight: '600', color: colors.muted },
@@ -128,4 +128,4 @@ const s = StyleSheet.create({
   texto: { fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   acciones: { flexDirection: 'row', gap: 16, marginTop: 2 },
   accion: { fontSize: 13, fontWeight: '600', color: colors.muted },
-});
+}));

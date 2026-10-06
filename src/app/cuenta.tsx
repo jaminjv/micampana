@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { Text } from '@/components/Texto';
+import { SelectorTema } from '@/components/SelectorTema';
 import { Body, Button, Card, Field, Notice, Screen, Small, Title, TopBar } from '@/components/ui';
 import * as remoto from '@/data/remoto';
 import { useApp } from '@/state/app';
@@ -70,6 +71,7 @@ export default function Cuenta() {
         <Notice icon="information-circle" tone="primary">
           Estás usando datos de prueba. El ingreso con celular funciona cuando la app está conectada a Supabase.
         </Notice>
+        <SelectorTema />
       </Screen>
     );
   }
@@ -99,6 +101,7 @@ export default function Cuenta() {
           }}
         />
         <Small>Al cerrar sesión, este teléfono queda como nuevo. Tus datos siguen guardados en tu cuenta.</Small>
+        <SelectorTema />
       </Screen>
     );
   }
@@ -170,6 +173,7 @@ export default function Cuenta() {
         </>
       )}
       {error ? <Notice icon="warning" tone="danger">{error}</Notice> : null}
+      {paso === 'numero' ? <SelectorTema /> : null}
     </Screen>
   );
 }

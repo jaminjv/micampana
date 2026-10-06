@@ -9,7 +9,7 @@ import * as remoto from '@/data/remoto';
 import type { ArchivoLocal, Colaborador, Miembro, RolEquipo, SolicitudVisita } from '@/data/types';
 import { diaRelativo, hace, horaTexto } from '@/lib/fechas';
 import { useApp } from '@/state/app';
-import { colors, radius, shadow, type } from '@/theme';
+import { type, colors, radius, shadow, estilos } from '@/theme';
 import { FotoPerfil } from './FotoPerfil';
 import { Text } from './Texto';
 import { Badge, Button, Ionicons, Row, Small } from './ui';
@@ -203,7 +203,7 @@ function Check({ ok, texto }: { ok: boolean; texto: string }) {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   datosGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 10, justifyContent: 'space-between' },
   checks: { gap: 8, padding: 12, borderRadius: radius.md, backgroundColor: colors.background },
   cabecera: { backgroundColor: colors.night, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
@@ -218,4 +218,4 @@ const s = StyleSheet.create({
   fotoTexto: { fontSize: 14, fontWeight: '600', color: colors.primary },
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, gap: 8, ...shadow.sm },
   cardTitulo: { fontSize: 17, fontWeight: '700', color: colors.ink },
-});
+}));

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { CabeceraEquipo } from '@/components/equipo';
 import { Text } from '@/components/Texto';
@@ -8,7 +8,7 @@ import { agendaDe, enZona, getCandidato, getMiembro, solicitudesDe, tareasDe, ve
 import type { Tarea } from '@/data/types';
 import { diaRelativo, fechaCorta, horaTexto } from '@/lib/fechas';
 import { useMiMiembro } from '@/state/app';
-import { colors, radius, type } from '@/theme';
+import { type, colors, radius, estilos } from '@/theme';
 
 /** Mis tareas: la próxima actividad en el barrio, las tareas por hacer y las visitas propuestas. */
 export default function MisTareas() {
@@ -102,11 +102,11 @@ function TareaCard({ t }: { t: Tarea }) {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   sub: { fontSize: 14, color: colors.onNightMuted },
   proxima: { marginTop: 6, padding: 16, gap: 4, borderRadius: radius.lg, backgroundColor: colors.primary },
   proximaEtiqueta: { fontSize: 12, fontWeight: '700', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: 0.6 },
   proximaTitulo: { fontSize: 19, fontWeight: '700', color: '#FFFFFF' },
   proximaTexto: { fontSize: 15, color: '#FFFFFF' },
   cuerpo: { width: '100%', maxWidth: 760, alignSelf: 'center', padding: 20, paddingBottom: 32, gap: 14 },
-});
+}));

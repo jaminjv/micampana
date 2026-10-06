@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Text } from '@/components/Texto';
 import { Avatar, Badge, Button, Card, CheckRow, Ionicons, Row, Screen, Small, TopBar } from '@/components/ui';
@@ -7,7 +7,7 @@ import { colaboradoresDe, cupoDe, delegar, invitacionesDe, miembrosDe } from '@/
 import type { Miembro } from '@/data/types';
 import { fechaCorta } from '@/lib/fechas';
 import { useMiCampana } from '@/state/app';
-import { colors, radius, shadow, type } from '@/theme';
+import { type, colors, radius, shadow, estilos } from '@/theme';
 
 /** Equipo: toda la red del candidato (coordinadores, líderes y colaboradores) y quién maneja qué. */
 export default function Equipo() {
@@ -119,11 +119,11 @@ function FilaLider({ l }: { l: Miembro }) {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   bloque: { gap: 10, padding: 16, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, ...shadow.sm },
   nombre: { fontSize: 16, fontWeight: '700', color: colors.ink },
   delegado: { paddingHorizontal: 4 },
   lider: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: radius.md, backgroundColor: colors.background },
   liderNombre: { fontSize: 15, fontWeight: '600', color: colors.ink },
   codigo: { fontSize: 18, fontWeight: '700', color: colors.ink, letterSpacing: 1 },
-});
+}));

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Text } from '@/components/Texto';
 import { ListaActividades } from '@/components/agenda';
@@ -10,7 +10,7 @@ import { agendaDe, aprobarVisita, rechazarVisita, solicitudesDe } from '@/data/r
 import type { Actividad } from '@/data/types';
 import { diaRelativo } from '@/lib/fechas';
 import { useMiCampana } from '@/state/app';
-import { colors, radius } from '@/theme';
+import { colors, radius, estilos } from '@/theme';
 
 type Vista = 'proximas' | 'pasadas';
 
@@ -96,9 +96,9 @@ export default function Agenda() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   nueva: { height: 40, paddingHorizontal: 14, marginRight: 8, borderRadius: radius.md, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', gap: 4 },
   nuevaText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
   h2: { fontSize: 17, fontWeight: '700', color: colors.ink },
   h3: { fontSize: 16, fontWeight: '700', color: colors.ink },
-});
+}));

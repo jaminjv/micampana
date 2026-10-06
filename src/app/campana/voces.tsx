@@ -1,13 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Badge, Button, Card, Chip, ChipRow, Field, Notice, Row, Screen, Small, TopBar } from '@/components/ui';
 import { aportesDeCampana, marcarEnRevision, responderAporte } from '@/data/repo';
 import type { Aporte, EstadoAporte, TipoAporte } from '@/data/types';
 import { hace } from '@/lib/fechas';
 import { useMiCampana } from '@/state/app';
-import { colors } from '@/theme';
+import { colors, estilos } from '@/theme';
 import { Text } from '@/components/Texto';
 
 const FILTROS: { value?: TipoAporte; label: string }[] = [
@@ -144,9 +144,9 @@ function AporteCard({ a, candidato }: { a: Aporte; candidato: boolean }) {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   h3: { fontSize: 16, fontWeight: '700', color: colors.ink },
   body: { fontSize: 15, lineHeight: 21, color: colors.ink },
   respuesta: { backgroundColor: colors.background, borderRadius: 10, padding: 12, gap: 4 },
   respLabel: { fontSize: 12, fontWeight: '700', color: colors.okFg },
-});
+}));

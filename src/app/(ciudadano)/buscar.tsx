@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CandidatoRow } from '@/components/cards';
@@ -8,7 +8,7 @@ import { CARGOS, PARTIDOS } from '@/data/catalogos';
 import { buscarCandidatos } from '@/data/repo';
 import type { Cargo } from '@/data/types';
 import { useApp } from '@/state/app';
-import { colors, radius } from '@/theme';
+import { colors, radius, estilos } from '@/theme';
 import { Text, TextInput } from '@/components/Texto';
 
 /** Directorio de candidatos: por nombre o @usuario, con filtros de región, cargo y partido. */
@@ -82,7 +82,7 @@ export default function Buscar() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   root: { flex: 1, backgroundColor: colors.background },
   content: { padding: 20, gap: 12 },
   title: { fontSize: 26, fontWeight: '700', color: colors.ink },
@@ -91,4 +91,4 @@ const s = StyleSheet.create({
   qr: { width: 40, height: 40, borderRadius: 10, backgroundColor: colors.primaryTint, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', gap: 8 },
   label: { fontSize: 14, fontWeight: '600', color: colors.ink, marginTop: 4 },
-});
+}));

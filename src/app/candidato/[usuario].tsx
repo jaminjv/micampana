@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { NumeroTarjeton, PropuestaCard } from '@/components/cards';
 import { Avatar, Badge, Button, Card, Notice, Row, Screen, Segmented, Small, TopBar, VerifiedMark } from '@/components/ui';
@@ -10,7 +10,7 @@ import {
 } from '@/data/repo';
 import { diaCorto, horaTexto } from '@/lib/fechas';
 import { useApp } from '@/state/app';
-import { colors } from '@/theme';
+import { colors, estilos } from '@/theme';
 import { Text } from '@/components/Texto';
 
 /** Perfil público: quién es, qué propone para el territorio del ciudadano y sus eventos. */
@@ -139,7 +139,7 @@ export default function PerfilCandidato() {
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   name: { fontSize: 19, fontWeight: '700', color: colors.ink, flexShrink: 1 },
   user: { fontSize: 14, fontWeight: '600', color: colors.primary },
   h1: { fontSize: 21, fontWeight: '700', color: colors.ink },
@@ -148,4 +148,4 @@ const s = StyleSheet.create({
   fecha: { width: 44, alignItems: 'center' },
   fechaDia: { fontSize: 11, fontWeight: '700', color: colors.primary },
   fechaNum: { fontSize: 20, fontWeight: '800', color: colors.ink },
-});
+}));

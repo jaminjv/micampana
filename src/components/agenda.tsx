@@ -1,12 +1,12 @@
 /** Piezas de la agenda y los compromisos que se usan en varias pantallas. */
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { ESTADOS_COMPROMISO, TIPOS_ACTIVIDAD } from '@/data/catalogos';
 import { getActividad, getPropuesta } from '@/data/repo';
 import type { Actividad, Compromiso } from '@/data/types';
 import { fechaCorta, horaTexto } from '@/lib/fechas';
-import { colors, radius, shadow } from '@/theme';
+import { colors, radius, shadow, estilos } from '@/theme';
 import { Text } from './Texto';
 import { Badge, Row } from './ui';
 
@@ -65,7 +65,7 @@ export function CompromisoCard({ c, onPress }: { c: Compromiso; onPress?: () => 
   );
 }
 
-const s = StyleSheet.create({
+const s = estilos(() => ({
   lista: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, overflow: 'hidden', ...shadow.sm },
   fila: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 16, minHeight: 56 },
   filaBorde: { borderBottomWidth: 1, borderBottomColor: colors.divider },
@@ -74,4 +74,4 @@ const s = StyleSheet.create({
   meta: { fontSize: 13, color: colors.muted, lineHeight: 18 },
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, gap: 8, ...shadow.sm },
   que: { fontSize: 16, fontWeight: '600', color: colors.ink, lineHeight: 22 },
-});
+}));
