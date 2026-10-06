@@ -5,7 +5,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/Texto';
 import { ListaActividades } from '@/components/agenda';
 import { Button, Card, Ionicons, Notice, Screen, Segmented, Small, TopBar } from '@/components/ui';
-import { agendaDe } from '@/data/repo';
+import { SolicitudCard } from '@/components/equipo';
+import { agendaDe, aprobarVisita, rechazarVisita, solicitudesDe } from '@/data/repo';
 import type { Actividad } from '@/data/types';
 import { diaRelativo } from '@/lib/fechas';
 import { useMiCampana } from '@/state/app';
@@ -28,6 +29,7 @@ export default function Agenda() {
 
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
+  const porConfirmar = solicitudesDe(c.id, 'pendiente');
   const lista =
     vista === 'proximas' ? agendaDe(c.id, hoy) : agendaDe(c.id, undefined, hoy).reverse();
 
@@ -61,6 +63,20 @@ export default function Agenda() {
         onChange={setVista}
         options={[{ value: 'proximas', label: 'Próximas' }, { value: 'pasadas', label: 'Pasadas' }]}
       />
+
+      {porConfirmar.length && vista === 'proximas' ? (
+        <View style={{ gap: 8 }}>
+          <Text style={s.h2}>Visitas propuestas por confirmar</Text>
+          {porConfirmar.map((v) => (
+            <SolicitudCard
+              key={v.id}
+              v={v}
+              onAprobar={() => aprobarVisita(v.id)}
+              onRechazar={() => rechazarVisita(v.id, 'Por ahora no se puede en esa fecha. Propón otra.')}
+            />
+          ))}
+        </View>
+      ) : null}
 
       {dias.length === 0 ? (
         <Card>

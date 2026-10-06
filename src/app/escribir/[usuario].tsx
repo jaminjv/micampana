@@ -27,6 +27,10 @@ export default function Escribir() {
   const [texto, setTexto] = useState('');
   const [enviado, setEnviado] = useState(false);
   const valido = !!tema && texto.trim().length >= 15;
+  // Qué falta para poder enviar, dicho con claridad junto al botón.
+  const falta = [!tema ? 'elige un tema' : '', texto.trim().length < 15 ? `escribe ${15 - texto.trim().length} caracteres más` : '']
+    .filter(Boolean)
+    .join(' y ');
 
   if (!c || !ciudadano) {
     return (
@@ -53,17 +57,20 @@ export default function Escribir() {
       background={colors.surface}
       header={<TopBar title="Nuevo aporte" subtitle={`Para ${c.nombre} · @${c.usuario}`} />}
       footer={
-        <Button
-          label="Enviar aporte"
-          variant="accent"
-          disabled={!valido}
-          onPress={() => {
-            const ub = ciudadano.ubicacion;
-            const lugar = ub.barrio ? `Barrio ${nombreZona(ub.barrio)}` : nombreMunicipio(ub.municipio);
-            enviarAporte({ candidato: c.id, tipo, tema: tema!, texto: texto.trim(), lugar });
-            setEnviado(true);
-          }}
-        />
+        <>
+          {falta ? <Small style={{ textAlign: 'center' }}>{`Para enviar: ${falta}.`}</Small> : null}
+          <Button
+            label="Enviar aporte"
+            variant="accent"
+            disabled={!valido}
+            onPress={() => {
+              const ub = ciudadano.ubicacion;
+              const lugar = ub.barrio ? `Barrio ${nombreZona(ub.barrio)}` : nombreMunicipio(ub.municipio);
+              enviarAporte({ candidato: c.id, tipo, tema: tema!, texto: texto.trim(), lugar });
+              setEnviado(true);
+            }}
+          />
+        </>
       }>
       <Title>¿Qué quieres enviar?</Title>
       <Segmented<TipoAporte>

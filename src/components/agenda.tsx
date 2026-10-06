@@ -11,11 +11,13 @@ import { Text } from './Texto';
 import { Badge, Row } from './ui';
 
 /** Fila de la agenda: hora, título, lugar y estado. */
-export function FilaActividad({ a, ultima }: { a: Actividad; ultima?: boolean }) {
+/** soloLectura: el equipo ve la agenda sin abrir el detalle (que es del candidato). */
+export function FilaActividad({ a, ultima, soloLectura }: { a: Actividad; ultima?: boolean; soloLectura?: boolean }) {
   const cancelada = a.estado === 'cancelada';
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={soloLectura ? undefined : 'button'}
+      disabled={soloLectura}
       onPress={() => router.push({ pathname: '/campana/actividad', params: { id: a.id } })}
       style={({ pressed }) => [s.fila, !ultima && s.filaBorde, pressed && { backgroundColor: colors.background }]}>
       <Text style={[s.hora, cancelada && { color: colors.faint }]}>{horaTexto(a.fecha)}</Text>
@@ -32,10 +34,10 @@ export function FilaActividad({ a, ultima }: { a: Actividad; ultima?: boolean })
 }
 
 /** Lista de filas de actividades dentro de una tarjeta. */
-export function ListaActividades({ items }: { items: Actividad[] }) {
+export function ListaActividades({ items, soloLectura }: { items: Actividad[]; soloLectura?: boolean }) {
   return (
     <View style={s.lista}>
-      {items.map((a, i) => <FilaActividad key={a.id} a={a} ultima={i === items.length - 1} />)}
+      {items.map((a, i) => <FilaActividad key={a.id} a={a} ultima={i === items.length - 1} soloLectura={soloLectura} />)}
     </View>
   );
 }

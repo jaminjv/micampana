@@ -6,11 +6,15 @@
  */
 import { useSyncExternalStore } from 'react';
 
-import { CARGOS, municipiosDe, nombreDepartamento, nombreMunicipio, nombrePartido, zonasDe } from './catalogos';
-import { ACTIVIDADES, APORTES, CANDIDATOS, COMPROMISOS, EVENTOS, PROPUESTAS, PUBLICACIONES } from './mock';
+import { CARGOS, municipiosDe, nombreDepartamento, nombreMunicipio, nombrePartido, ZONAS, zonasDe } from './catalogos';
+import {
+  ACTIVIDADES, APORTES, CANDIDATOS, COLABORADORES, COMPROMISOS, EVENTOS, INVITACIONES, MIEMBROS, PROPUESTAS, PUBLICACIONES,
+  SOLICITUDES_VISITA, TAREAS,
+} from './mock';
 import * as remoto from './remoto';
 import type {
-  Actividad, Alcance, Aporte, ArchivoLocal, Compromiso, EstadoCompromiso, Candidato, Cargo, Etapa, Evento, ModoUso, Propuesta, Publicacion, Tema, TipoAporte, TipoAval,
+  Actividad, Alcance, Aporte, ArchivoLocal, Colaborador, EstadoColaborador, Invitacion, Miembro, ReporteTarea, RolEquipo,
+  SolicitudVisita, Tarea, Compromiso, EstadoCompromiso, Candidato, Cargo, Etapa, Evento, ModoUso, Propuesta, Publicacion, Tema, TipoAporte, TipoAval,
   TipoLista, Ubicacion,
 } from './types';
 
@@ -505,5 +509,277 @@ export function incluirEnPropuesta(id: string, propuesta: string) {
   c.propuesta = propuesta;
   c.estado = 'incluido';
   remoto.guardarCompromiso(c);
+  avisar();
+}
+
+/* ---------- Equipo de campaña ---------- */
+
+export const getMiembro = (id?: string) => (id ? MIEMBROS.find((m) => m.id === id) : undefined);
+
+export function miembrosDe(candidato: string, f: { rol?: RolEquipo; superior?: string } = {}): Miembro[] {
+  return MIEMBROS.filter(
+    (m) => m.candidato === candidato && m.activo && (!f.rol || m.rol === f.rol) && (!f.superior || m.superior === f.superior),
+  ).sort((a, b) => a.nombre.localeCompare(b.nombre));
+}
+
+/**
+ * ¿Un territorio (de una actividad, tarea o visita) cae en la zona de un miembro?
+ * Lo que es para todo el municipio o departamento lo ven todas las zonas.
+ */
+export function enZona(zona: Alcance, a: Alcance): boolean {
+  if (a.nivel === 'municipio' || a.nivel === 'departamento' || zona.nivel === 'municipio' || zona.nivel === 'departamento') return true;
+  const padre = (id: string) => ZONAS.find((z) => z.id === id)?.padre;
+  if (zona.nivel === 'comuna') {
+    return a.ids.some((id) => zona.ids.includes(id) || zona.ids.includes(padre(id) ?? ''));
+  }
+  // Zona de barrio: los de su barrio y los de la comuna que lo contiene.
+  return a.ids.some((id) => zona.ids.includes(id) || zona.ids.some((b) => padre(b) === id));
+}
+
+/** Quién puede poner visitas en la agenda: el candidato o un coordinador con la agenda delegada. */
+export const puedeAgendar = (m?: Miembro) => !m || (m.rol === 'coordinador' && m.delegadoAgenda);
+/** Quién aprueba colaboradores: el candidato o un coordinador con esa función delegada. */
+export const puedeAprobar = (m?: Miembro) => !m || (m.rol === 'coordinador' && m.delegadoAprobaciones);
+
+/* Invitaciones */
+
+export function invitacionesDe(candidato: string, superior?: string): Invitacion[] {
+  return INVITACIONES.filter(
+    (i) => i.candidato === candidato && !i.usadaPor && (superior === undefined || i.superior === superior) &&
+      new Date(i.vence).getTime() > Date.now(),
+  );
+}
+
+export interface DatosInvitacion {
+  rol: RolEquipo;
+  zona: Alcance;
+  superior?: string;
+  delegadoAgenda?: boolean;
+  delegadoAprobaciones?: boolean;
+}
+
+/** Crea un código de invitación (p. ej. MC-4821) que vence en 14 días. */
+export function crearInvitacion(candidato: string, d: DatosInvitacion): Invitacion {
+  let codigo = '';
+  do codigo = `MC-${Math.floor(1000 + Math.random() * 9000)}`;
+  while (INVITACIONES.some((i) => i.codigo === codigo));
+  const inv: Invitacion = {
+    codigo, candidato, rol: d.rol, zona: d.zona, superior: d.superior,
+    delegadoAgenda: !!d.delegadoAgenda, delegadoAprobaciones: !!d.delegadoAprobaciones,
+    vence: new Date(Date.now() + 14 * 86400_000).toISOString(),
+  };
+  INVITACIONES.push(inv);
+  remoto.crearInvitacion(inv);
+  avisar();
+  return inv;
+}
+
+/** Lo que ve quien escribe un código antes de unirse. */
+export interface ResumenInvitacion {
+  codigo: string;
+  rol: RolEquipo;
+  zona: Alcance;
+  campana: string; // id
+  candidatoNombre: string;
+  cargoTexto: string;
+  delegadoAgenda: boolean;
+  delegadoAprobaciones: boolean;
+  superiorNombre?: string;
+}
+
+const normalizarCodigo = (c: string) => c.trim().toUpperCase().replace(/\s+/g, '');
+
+export async function verInvitacion(codigo: string): Promise<ResumenInvitacion | null> {
+  const cod = normalizarCodigo(codigo);
+  if (remoto.conectado) return remoto.verInvitacion(cod);
+  const inv = INVITACIONES.find((i) => i.codigo === cod && !i.usadaPor && new Date(i.vence).getTime() > Date.now());
+  const c = inv ? getCandidato(inv.candidato) : undefined;
+  if (!inv || !c) return null;
+  return {
+    codigo: inv.codigo, rol: inv.rol, zona: inv.zona, campana: c.id, candidatoNombre: c.nombre, cargoTexto: cargoConTerritorio(c),
+    delegadoAgenda: inv.delegadoAgenda, delegadoAprobaciones: inv.delegadoAprobaciones, superiorNombre: getMiembro(inv.superior)?.nombre,
+  };
+}
+
+/** Se une a la campaña con el código. Devuelve el id del nuevo miembro. */
+export async function usarInvitacion(codigo: string, nombre: string): Promise<string> {
+  const cod = normalizarCodigo(codigo);
+  if (remoto.conectado) return remoto.usarInvitacion(cod, nombre);
+  const inv = INVITACIONES.find((i) => i.codigo === cod && !i.usadaPor);
+  if (!inv) throw new Error('El código no existe, ya se usó o venció.');
+  const m: Miembro = {
+    id: nuevoId(), candidato: inv.candidato, nombre, rol: inv.rol, superior: inv.superior, zona: inv.zona,
+    delegadoAgenda: inv.delegadoAgenda, delegadoAprobaciones: inv.delegadoAprobaciones,
+    cupo: inv.rol === 'lider' ? 15 : undefined, activo: true, desde: new Date().toISOString(),
+  };
+  MIEMBROS.push(m);
+  inv.usadaPor = m.id;
+  avisar();
+  return m.id;
+}
+
+/** Cambia las funciones delegadas de un coordinador (solo el candidato). */
+export function delegar(miembro: string, cambios: { delegadoAgenda?: boolean; delegadoAprobaciones?: boolean }) {
+  const m = getMiembro(miembro);
+  if (!m) return;
+  Object.assign(m, cambios);
+  remoto.guardarMiembro(m);
+  avisar();
+}
+
+/* Colaboradores */
+
+export const getColaborador = (id: string) => COLABORADORES.find((c) => c.id === id);
+
+export function colaboradoresDe(f: { lider?: string; candidato?: string; estado?: EstadoColaborador }): Colaborador[] {
+  return COLABORADORES.filter(
+    (c) => (!f.lider || c.lider === f.lider) && (!f.candidato || c.candidato === f.candidato) && (!f.estado || c.estado === f.estado),
+  ).sort((a, b) => b.creado.localeCompare(a.creado));
+}
+
+/** Cupo de un líder: cuántos colaboradores tiene (sin contar rechazados) y cuántos puede tener. */
+export function cupoDe(lider: string): { usados: number; total: number } {
+  const m = getMiembro(lider);
+  const c = m ? getCandidato(m.candidato) : undefined;
+  return {
+    usados: COLABORADORES.filter((x) => x.lider === lider && x.estado !== 'rechazado').length,
+    total: m?.cupo ?? c?.cupoPorLider ?? 15,
+  };
+}
+
+/** Edad cumplida hoy a partir de AAAA-MM-DD. */
+export function edad(fechaNacimiento: string): number {
+  const [a, m, d] = fechaNacimiento.split('-').map(Number);
+  const hoy = new Date();
+  let e = hoy.getFullYear() - a;
+  if (hoy.getMonth() + 1 < m || (hoy.getMonth() + 1 === m && hoy.getDate() < d)) e--;
+  return e;
+}
+
+export type DatosColaborador = Pick<Colaborador, 'nombre' | 'cedula' | 'celular' | 'fechaNacimiento' | 'barrio' | 'barrioTexto' | 'ayudaEn'>;
+
+/**
+ * Registra un colaborador con sus fotos (tomadas con la cámara) y su autorización.
+ * Queda "por verificar" hasta que lo apruebe el coordinador o el candidato.
+ */
+export function registrarColaborador(lider: string, d: DatosColaborador, fotos: { rostro: ArchivoLocal; cedula: ArchivoLocal }): string {
+  const m = getMiembro(lider);
+  if (!m) throw new Error('No eres líder de esta campaña.');
+  const { usados, total } = cupoDe(lider);
+  if (usados >= total) throw new Error('Tu cupo de colaboradores está lleno.');
+  if (edad(d.fechaNacimiento) < 18) throw new Error('Solo se pueden registrar mayores de edad.');
+  if (COLABORADORES.some((c) => c.candidato === m.candidato && c.cedula === d.cedula)) throw new Error('Esa cédula ya está registrada en la campaña.');
+  const id = nuevoId();
+  const ruta = (cual: string, a: ArchivoLocal) => (remoto.conectado ? remoto.rutaEquipo(m.candidato, `colaboradores/${id}-${cual}`, a.nombre) : a.uri);
+  const c: Colaborador = {
+    ...d, id, candidato: m.candidato, lider, fotoRostro: ruta('rostro', fotos.rostro), fotoCedula: ruta('cedula', fotos.cedula),
+    autorizacion: new Date().toISOString(), estado: 'por_verificar', creado: new Date().toISOString(),
+  };
+  COLABORADORES.push(c);
+  remoto.registrarColaborador(c, fotos);
+  avisar();
+  return id;
+}
+
+export function verificarColaborador(id: string, estado: 'activo' | 'rechazado', aprobadoPor?: string) {
+  const c = getColaborador(id);
+  if (!c) return;
+  c.estado = estado;
+  remoto.verificarColaborador(c, aprobadoPor);
+  avisar();
+}
+
+/* Tareas */
+
+export const getTarea = (id: string) => TAREAS.find((t) => t.id === id);
+
+/** Tareas de un miembro (las que le asignaron), las pendientes primero y por fecha límite. */
+export function tareasDe(miembro: string): Tarea[] {
+  return TAREAS.filter((t) => t.asignadaA === miembro).sort(
+    (a, b) => (a.estado === b.estado ? (a.fechaLimite ?? '9').localeCompare(b.fechaLimite ?? '9') : a.estado === 'pendiente' ? -1 : 1),
+  );
+}
+
+/** Tareas que asignó un miembro (o el candidato, si no se indica), las más recientes primero. */
+export function tareasAsignadas(candidato: string, por?: string): Tarea[] {
+  return TAREAS.filter((t) => t.candidato === candidato && (por === undefined || t.asignadaPor === por)).sort((a, b) =>
+    b.creada.localeCompare(a.creada),
+  );
+}
+
+/** ¿Se venció sin reporte? */
+export const vencida = (t: Tarea) => t.estado === 'pendiente' && !!t.fechaLimite && new Date(t.fechaLimite).getTime() < Date.now();
+
+/** Asigna la misma tarea a varios miembros (una por cada uno, del mismo grupo). */
+export function asignarTarea(
+  candidato: string,
+  d: { titulo: string; para: string[]; fechaLimite?: string; evidencia: boolean },
+  asignadaPor?: string,
+): number {
+  const grupo = nuevoId();
+  d.para.forEach((asignadaA) => {
+    const t: Tarea = {
+      id: nuevoId(), candidato, grupo, titulo: d.titulo, asignadaA, asignadaPor, fechaLimite: d.fechaLimite,
+      evidencia: d.evidencia, estado: 'pendiente', creada: new Date().toISOString(),
+    };
+    TAREAS.push(t);
+    remoto.guardarTarea(t);
+  });
+  avisar();
+  return d.para.length;
+}
+
+export function reportarTarea(id: string, r: Omit<ReporteTarea, 'fotos' | 'fecha'>, fotos: ArchivoLocal[]) {
+  const t = getTarea(id);
+  if (!t) return;
+  if (t.evidencia && fotos.length === 0) throw new Error('Esta tarea pide al menos una foto de evidencia.');
+  const rutas = fotos.map((f, i) => (remoto.conectado ? remoto.rutaEquipo(t.candidato, `tareas/${t.id}-${i + 1}`, f.nombre) : f.uri));
+  t.estado = 'reportada';
+  t.reporte = { ...r, fotos: rutas, fecha: new Date().toISOString() };
+  remoto.reportarTarea(t, fotos);
+  avisar();
+}
+
+/* Visitas propuestas por líderes */
+
+export function solicitudesDe(candidato: string, estado?: SolicitudVisita['estado']): SolicitudVisita[] {
+  return SOLICITUDES_VISITA.filter((v) => v.candidato === candidato && (!estado || v.estado === estado)).sort((a, b) =>
+    a.fecha.localeCompare(b.fecha),
+  );
+}
+
+export type DatosSolicitud = Pick<SolicitudVisita, 'lugar' | 'fecha' | 'comunidad' | 'asistentesEsperados' | 'temas'>;
+
+export function proponerVisita(lider: string, d: DatosSolicitud): string {
+  const m = getMiembro(lider);
+  if (!m) throw new Error('No eres parte del equipo.');
+  const v: SolicitudVisita = { ...d, id: nuevoId(), candidato: m.candidato, propuestaPor: lider, estado: 'pendiente', creada: new Date().toISOString() };
+  SOLICITUDES_VISITA.push(v);
+  remoto.guardarSolicitud(v);
+  avisar();
+  return v.id;
+}
+
+/** Aprueba la visita: queda en la agenda del candidato, con el líder como anfitrión. */
+export function aprobarVisita(id: string) {
+  const v = SOLICITUDES_VISITA.find((x) => x.id === id);
+  if (!v || v.estado !== 'pendiente') return;
+  const lider = getMiembro(v.propuestaPor);
+  v.actividad = crearActividad(v.candidato, {
+    tipo: 'visita', titulo: `Visita ${v.comunidad.etiqueta}`, fecha: v.fecha, lugar: v.lugar, comunidad: v.comunidad,
+    responsable: lider ? `${lider.nombre} (líder)` : undefined, asistentesEsperados: v.asistentesEsperados,
+    notas: v.temas.length ? `Temas que pide la comunidad: ${v.temas.join(', ')}.` : undefined,
+  });
+  v.estado = 'aprobada';
+  remoto.guardarSolicitud(v);
+  avisar();
+}
+
+export function rechazarVisita(id: string, motivo: string) {
+  const v = SOLICITUDES_VISITA.find((x) => x.id === id);
+  if (!v) return;
+  v.estado = 'rechazada';
+  v.motivo = motivo;
+  remoto.guardarSolicitud(v);
   avisar();
 }

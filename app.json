@@ -30,6 +30,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 120
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "nexo usa la cámara para tomar la foto de los colaboradores, de su cédula y la evidencia de las tareas.",
+          "photosPermission": false
+        }
       ]
     ],
     "experiments": {

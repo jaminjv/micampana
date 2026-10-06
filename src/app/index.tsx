@@ -6,19 +6,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, type IconName } from '@/components/ui';
 import { APP_NAME } from '@/config';
 import { conectado } from '@/data/remoto';
-import { useApp } from '@/state/app';
+import { ROLES } from '@/components/equipo';
+import { getCandidato } from '@/data/repo';
+import { useApp, useMiMiembro } from '@/state/app';
 import { colors, radius, shadow, type } from '@/theme';
 import { Text } from '@/components/Texto';
 
 /** Bienvenida: cada tipo de usuario elige por dónde entrar. */
 export default function Bienvenida() {
-  const { reiniciarBorrador, ciudadano, candidatura, entrarComoDemo } = useApp();
+  const { reiniciarBorrador, ciudadano, candidatura, miembroId } = useApp();
+  const miembro = useMiMiembro();
 
   return (
     <SafeAreaView style={s.root}>
       <View style={s.hero}>
         <Image source={require('@/../assets/images/logo-nexo.png')} style={s.logo} contentFit="contain" accessibilityLabel={APP_NAME} />
-        <Text style={s.tagline}>Donde los candidatos proponen y la gente responde.</Text>
+        <Text style={s.tagline}>Construyamos</Text>
       </View>
 
       <View style={s.options}>
@@ -39,25 +42,28 @@ export default function Bienvenida() {
             router.push('/registro/etapa');
           }}
         />
-        <Entrada
-          icon="key"
-          title="Tengo un código de invitación"
-          text="Para coordinadores, líderes y equipos de marketing."
-          onPress={() => router.push('/invitacion')}
-        />
+        {miembro ? (
+          <Entrada
+            icon="briefcase"
+            title={`Mi equipo: ${ROLES[miembro.rol]}`}
+            text={`${miembro.zona.etiqueta} · campaña de ${getCandidato(miembro.candidato)?.nombre ?? ''}`}
+            onPress={() => router.push(miembro.rol === 'coordinador' ? '/coordinador' : '/lider')}
+          />
+        ) : (
+          <Entrada
+            icon="key"
+            title="Tengo un código de invitación"
+            text="Para coordinadores, líderes y equipos de marketing."
+            onPress={() => router.push('/invitacion')}
+          />
+        )}
         {conectado && !candidatura && !ciudadano ? (
           <Pressable accessibilityRole="button" onPress={() => router.push('/cuenta')} style={s.demo}>
             <Text style={s.demoText}>Ya tengo cuenta: entrar con mi celular</Text>
           </Pressable>
         ) : null}
-        {!candidatura && !conectado ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => {
-              entrarComoDemo();
-              router.push('/campana');
-            }}
-            style={s.demo}>
+        {!candidatura && !miembroId && !conectado ? (
+          <Pressable accessibilityRole="button" onPress={() => router.push('/demo')} style={s.demo}>
             <Text style={s.demoText}>Ver una campaña de ejemplo</Text>
           </Pressable>
         ) : null}

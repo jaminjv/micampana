@@ -3,7 +3,9 @@
  * Las listas son mutables: repo.ts les agrega lo que se crea en la app mientras
  * no esté conectado Supabase (al recargar se reinicia).
  */
-import type { Actividad, Aporte, Candidato, Compromiso, Evento, Propuesta, Publicacion } from './types';
+import type {
+  Actividad, Aporte, Candidato, Colaborador, Compromiso, Evento, Invitacion, Miembro, Propuesta, Publicacion, SolicitudVisita, Tarea,
+} from './types';
 
 export const CANDIDATOS: Candidato[] = [
   {
@@ -143,4 +145,54 @@ export const COMPROMISOS: Compromiso[] = [
   { id: 'm2', candidato: 'k1', que: 'Estudiar un plan de control de motos en horario nocturno', conQuien: 'Comerciantes de la plaza',
     comunidad: { nivel: 'barrio', ids: ['b-centro'], etiqueta: 'Barrio Centro' }, estado: 'en_estudio', fecha: haceHoras(96),
     actividad: 'v5' },
+];
+
+/* ---------- Equipo de la campaña de prueba ---------- */
+
+const zona = (nivel: 'comuna' | 'barrio', id: string, etiqueta: string) => ({ nivel, ids: [id], etiqueta });
+
+export const MIEMBROS: Miembro[] = [
+  { id: 'q1', candidato: 'k1', nombre: 'Carlos Rojas', rol: 'coordinador', zona: zona('comuna', 'c1', 'Comuna 1'),
+    delegadoAgenda: true, delegadoAprobaciones: true, activo: true, desde: haceHoras(500) },
+  { id: 'q2', candidato: 'k1', nombre: 'Diana Pérez', rol: 'coordinador', zona: zona('comuna', 'c2', 'Comuna 2'),
+    delegadoAgenda: false, delegadoAprobaciones: false, activo: true, desde: haceHoras(400) },
+  { id: 'l1', candidato: 'k1', nombre: 'Marta Díaz', rol: 'lider', superior: 'q1', zona: zona('barrio', 'b-prado', 'Barrio El Prado'),
+    delegadoAgenda: false, delegadoAprobaciones: false, cupo: 15, activo: true, desde: haceHoras(300) },
+  { id: 'l2', candidato: 'k1', nombre: 'Jorge Muñoz', rol: 'lider', superior: 'q1', zona: zona('barrio', 'b-centro', 'Barrio Centro'),
+    delegadoAgenda: false, delegadoAprobaciones: false, cupo: 15, activo: true, desde: haceHoras(250) },
+];
+
+/** Códigos de prueba para unirse a la campaña de Laura Gómez. */
+export const INVITACIONES: Invitacion[] = [
+  { codigo: 'MC-4821', candidato: 'k1', rol: 'coordinador', zona: zona('comuna', 'c3', 'Comuna 3'),
+    delegadoAgenda: false, delegadoAprobaciones: true, vence: enDias(14) },
+  { codigo: 'MC-7315', candidato: 'k1', rol: 'lider', superior: 'q2', zona: zona('barrio', 'b-sanluis', 'Barrio San Luis'),
+    delegadoAgenda: false, delegadoAprobaciones: false, vence: enDias(14) },
+];
+
+export const COLABORADORES: Colaborador[] = [
+  { id: 'w1', candidato: 'k1', lider: 'l1', nombre: 'Rosa Cárdenas', cedula: '40123456', celular: '3104567890', fechaNacimiento: '1972-05-14',
+    barrio: 'b-prado', barrioTexto: 'El Prado', ayudaEn: ['Volanteo', 'Puerta a puerta'], autorizacion: haceHoras(240), estado: 'activo', creado: haceHoras(240) },
+  { id: 'w2', candidato: 'k1', lider: 'l1', nombre: 'Luis Ortega', cedula: '1117501234', celular: '3125550011', fechaNacimiento: '1995-11-02',
+    barrio: 'b-prado', barrioTexto: 'El Prado', ayudaEn: ['Logística'], autorizacion: haceHoras(200), estado: 'activo', creado: haceHoras(200) },
+  { id: 'w3', candidato: 'k1', lider: 'l1', nombre: 'Yesenia Mora', cedula: '1117609988', celular: '3009871234', fechaNacimiento: '2001-02-20',
+    barrio: 'b-prado', barrioTexto: 'El Prado', ayudaEn: ['Redes'], autorizacion: haceHoras(3), estado: 'por_verificar', creado: haceHoras(3) },
+  { id: 'w4', candidato: 'k1', lider: 'l2', nombre: 'Héctor Silva', cedula: '17654321', fechaNacimiento: '1968-08-30',
+    barrio: 'b-centro', barrioTexto: 'Centro', ayudaEn: ['Volanteo'], autorizacion: haceHoras(150), estado: 'activo', creado: haceHoras(150) },
+];
+
+export const TAREAS: Tarea[] = [
+  { id: 't1', candidato: 'k1', grupo: 'g1', titulo: 'Volanteo de propuestas de seguridad', asignadaA: 'l1', asignadaPor: 'q1',
+    fechaLimite: enDias(1, 18), evidencia: true, estado: 'pendiente', creada: haceHoras(30) },
+  { id: 't2', candidato: 'k1', grupo: 'g1', titulo: 'Volanteo de propuestas de seguridad', asignadaA: 'l2', asignadaPor: 'q1',
+    fechaLimite: enDias(1, 18), evidencia: true, estado: 'reportada', creada: haceHoras(30),
+    reporte: { notas: 'Cubrimos la calle 8 y la plaza. La gente pregunta por el alumbrado.', cantidad: 300, participantes: ['w4'], fotos: [], fecha: haceHoras(4) } },
+  { id: 't3', candidato: 'k1', grupo: 'g2', titulo: 'Confirmar asistentes a la visita', asignadaA: 'l1', asignadaPor: 'q1',
+    fechaLimite: enDias(0, 20), evidencia: false, estado: 'pendiente', creada: haceHoras(20) },
+];
+
+export const SOLICITUDES_VISITA: SolicitudVisita[] = [
+  { id: 's1', candidato: 'k1', propuestaPor: 'l1', lugar: 'Cancha del barrio El Prado', fecha: enDias(5, 10),
+    comunidad: zona('barrio', 'b-prado', 'Barrio El Prado'), asistentesEsperados: 60, temas: ['Vías', 'Seguridad'],
+    estado: 'pendiente', creada: haceHoras(10) },
 ];

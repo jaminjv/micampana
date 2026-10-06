@@ -9,9 +9,12 @@
  */
 import { supabase } from '@/lib/supabase';
 import { DEPARTAMENTOS, MUNICIPIOS, PARTIDOS, ZONAS } from './catalogos';
-import { ACTIVIDADES, APORTES, CANDIDATOS, COMPROMISOS, EVENTOS, PROPUESTAS, PUBLICACIONES } from './mock';
+import {
+  ACTIVIDADES, APORTES, CANDIDATOS, COLABORADORES, COMPROMISOS, EVENTOS, INVITACIONES, MIEMBROS, PROPUESTAS, PUBLICACIONES,
+  SOLICITUDES_VISITA, TAREAS,
+} from './mock';
 import type {
-  Actividad, Alcance, Aporte, ArchivoLocal, Compromiso, Candidato, Ciudadano, Evento, Propuesta, Publicacion, Zona,
+  Actividad, Alcance, Aporte, ArchivoLocal, Colaborador, Invitacion, Miembro, SolicitudVisita, Tarea, Compromiso, Candidato, Ciudadano, Evento, Propuesta, Publicacion, Zona,
 } from './types';
 
 export const conectado = !!supabase;
@@ -93,6 +96,7 @@ const candidatoDe = (r: any): Candidato => ({
   seguidores: r.seguidores ?? 0,
   modo: r.modo,
   soporte: r.soporte_url ?? undefined,
+  cupoPorLider: r.cupo_por_lider ?? undefined,
 });
 
 const propuestaDe = (r: any): Propuesta => ({
@@ -143,6 +147,40 @@ const compromisoDe = (r: any): Compromiso => ({
   fecha: r.creado, actividad: r.actividad_id ?? undefined, aporte: r.aporte_id ?? undefined, propuesta: r.propuesta_id ?? undefined,
 });
 
+const miembroDe = (r: any): Miembro => ({
+  id: r.id, candidato: r.campana_id, nombre: r.nombre || 'Sin nombre', rol: r.rol, superior: r.superior ?? undefined,
+  zona: r.nivel ? alcanceDe(r) : { nivel: 'municipio', ids: [], etiqueta: 'Toda la campaña' },
+  delegadoAgenda: !!r.delegado_agenda, delegadoAprobaciones: !!r.delegado_aprobaciones, cupo: r.cupo ?? undefined,
+  activo: !!r.activo, desde: r.creado,
+});
+
+const invitacionDe = (r: any): Invitacion => ({
+  codigo: r.codigo, candidato: r.campana_id, rol: r.rol, zona: alcanceDe(r), superior: r.superior ?? undefined,
+  delegadoAgenda: !!r.delegado_agenda, delegadoAprobaciones: !!r.delegado_aprobaciones, vence: r.vence,
+  usadaPor: r.usada_por ?? undefined,
+});
+
+const colaboradorDe = (r: any): Colaborador => ({
+  id: r.id, candidato: r.campana_id, lider: r.lider, nombre: r.nombre, cedula: r.cedula, celular: r.celular ?? undefined,
+  fechaNacimiento: r.fecha_nacimiento, barrio: r.barrio ?? undefined, barrioTexto: r.barrio_texto ?? '', ayudaEn: r.ayuda_en ?? [],
+  fotoRostro: r.foto_rostro_url, fotoCedula: r.foto_cedula_url, autorizacion: r.autorizacion_firmada, estado: r.estado, creado: r.creado,
+});
+
+const tareaDe = (r: any): Tarea => ({
+  id: r.id, candidato: r.campana_id, grupo: r.grupo, titulo: r.titulo, asignadaA: r.asignada_a, asignadaPor: r.asignada_por ?? undefined,
+  fechaLimite: r.fecha_limite ?? undefined, evidencia: !!r.evidencia, estado: r.estado, creada: r.creada,
+  reporte: r.reportada_el
+    ? { notas: r.reporte_notas ?? '', cantidad: r.reporte_cantidad ?? undefined, participantes: r.reporte_participantes ?? [],
+        fotos: r.reporte_fotos ?? [], fecha: r.reportada_el }
+    : undefined,
+});
+
+const solicitudDe = (r: any): SolicitudVisita => ({
+  id: r.id, candidato: r.campana_id, propuestaPor: r.propuesta_por, lugar: r.lugar, fecha: r.fecha, comunidad: alcanceDe(r),
+  asistentesEsperados: r.asistentes_esperados ?? undefined, temas: r.temas ?? [], estado: r.estado,
+  actividad: r.actividad_id ?? undefined, motivo: r.motivo ?? undefined, creada: r.creada,
+});
+
 const TIPOS_ZONA: Zona['tipo'][] = ['comuna', 'corregimiento', 'barrio', 'vereda'];
 
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -165,6 +203,8 @@ export interface SesionRemota {
   nombrePerfil?: string;
   campana?: Candidato;
   misAportes: string[];
+  /** Id de la membresía (coordinador, líder o marketing) de quien usa la app. */
+  miembro?: string;
 }
 
 /**
@@ -182,7 +222,8 @@ export async function cargarTodo(): Promise<SesionRemota> {
   uid = session?.user.id ?? null;
   if (!uid) throw new Error('No se pudo iniciar sesión.');
 
-  const [partidos, deps, muns, zonas, campanas, propuestas, eventos, pubs, aportes, perfiles, sigo, voy, agenda, compromisos] =
+  const [partidos, deps, muns, zonas, campanas, propuestas, eventos, pubs, aportes, perfiles, sigo, voy, agenda, compromisos,
+    membresias, invitaciones, colaboradores, tareas, solicitudes] =
     await Promise.all([
       leer(sb.from('partidos').select('id, nombre, sigla').eq('vigente', true).order('nombre'), 'los partidos'),
       leer(sb.from('departamentos').select('codigo, nombre').order('nombre'), 'los departamentos'),
@@ -203,6 +244,12 @@ export async function cargarTodo(): Promise<SesionRemota> {
       // RLS: solo llegan la agenda y los compromisos de la campaña de la que haces parte.
       leer(sb.from('actividades').select('*').order('fecha'), 'la agenda'),
       leer(sb.from('compromisos').select('*').order('creado', { ascending: false }), 'los compromisos'),
+      // Equipo: RLS deja ver solo lo de las campañas de las que haces parte.
+      leer(sb.from('membresias').select('*'), 'el equipo'),
+      leer(sb.from('invitaciones').select('*'), 'las invitaciones'),
+      leer(sb.from('colaboradores').select('*'), 'los colaboradores'),
+      leer(sb.from('tareas').select('*'), 'las tareas'),
+      leer(sb.from('solicitudes_visita').select('*'), 'las visitas propuestas'),
     ]);
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -222,6 +269,11 @@ export async function cargarTodo(): Promise<SesionRemota> {
   reemplazar(APORTES, aportes.map(aporteDe));
   reemplazar(ACTIVIDADES, agenda.map(actividadDe));
   reemplazar(COMPROMISOS, compromisos.map(compromisoDe));
+  reemplazar(MIEMBROS, membresias.map(miembroDe));
+  reemplazar(INVITACIONES, invitaciones.map(invitacionDe));
+  reemplazar(COLABORADORES, colaboradores.map(colaboradorDe));
+  reemplazar(TAREAS, tareas.map(tareaDe));
+  reemplazar(SOLICITUDES_VISITA, solicitudes.map(solicitudDe));
 
   const perfil: any = perfiles[0];
   const campana = campanas.find((c: any) => c.titular === uid);
@@ -247,6 +299,7 @@ export async function cargarTodo(): Promise<SesionRemota> {
     nombrePerfil: perfil?.nombre,
     campana: campana ? candidatoDe(campana) : undefined,
     misAportes: aportes.filter((a: any) => a.autor === uid).map((a: any) => a.id),
+    miembro: membresias.find((m: any) => m.perfil_id === uid && m.activo)?.id,
   };
   /* eslint-enable @typescript-eslint/no-explicit-any */
 }
@@ -531,4 +584,143 @@ export async function verificarCodigo(telefono: string, codigo: string, modo: 'v
 export async function cerrarSesion() {
   await db().auth.signOut();
   uid = null;
+}
+
+/* ---------- Equipo ---------- */
+
+const BUCKET_EQUIPO = 'equipo';
+
+/** Ruta privada de una foto del equipo: carpeta de la campaña (así lo exige la política de almacenamiento). */
+export function rutaEquipo(campana: string, nombre: string, original: string): string {
+  const ext = (original.match(/\.(\w{2,5})$/)?.[1] ?? 'jpg').toLowerCase();
+  return `${campana}/${nombre}.${ext}`;
+}
+
+/** Sube un archivo local a la carpeta privada del equipo. */
+async function subir(ruta: string, a: ArchivoLocal) {
+  try {
+    const datos = await (await fetch(a.uri)).arrayBuffer();
+    const r = await db().storage.from(BUCKET_EQUIPO).upload(ruta, datos, { contentType: a.tipo, upsert: false });
+    return { error: r.error ? { message: r.error.message } : null };
+  } catch {
+    return { error: { message: 'no se pudo leer la foto en el teléfono.' } };
+  }
+}
+
+/** Dirección temporal (1 hora) para ver una foto privada. */
+export async function urlFoto(ruta: string): Promise<string | undefined> {
+  const r = await db().storage.from(BUCKET_EQUIPO).createSignedUrl(ruta, 3600);
+  return r.data?.signedUrl;
+}
+
+export function crearInvitacion(i0: Invitacion) {
+  const i = foto(i0);
+  escribir('crear la invitación', () =>
+    db().rpc('crear_invitacion', {
+      p_codigo: i.codigo, p_campana: i.candidato, p_rol: i.rol, p_nivel: i.zona.nivel, p_ids: i.zona.ids, p_texto: i.zona.etiqueta,
+      p_superior: i.superior ?? null, p_agenda: i.delegadoAgenda, p_aprobaciones: i.delegadoAprobaciones,
+    }),
+  );
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export async function verInvitacion(codigo: string) {
+  const { data, error } = await db().rpc('ver_invitacion', { p_codigo: codigo });
+  if (error) throw new Error(error.message);
+  const r: any = Array.isArray(data) ? data[0] : data;
+  if (!r) return null;
+  return {
+    codigo: r.codigo, rol: r.rol, zona: alcanceDe(r), campana: r.campana_id, candidatoNombre: r.candidato_nombre,
+    cargoTexto: r.cargo_texto, delegadoAgenda: !!r.delegado_agenda, delegadoAprobaciones: !!r.delegado_aprobaciones,
+    superiorNombre: r.superior_nombre ?? undefined,
+  };
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+/** Se une a la campaña. Espera a que terminen las escrituras pendientes y devuelve el id de la membresía. */
+export async function usarInvitacion(codigo: string, nombre: string): Promise<string> {
+  await cola;
+  const { data, error } = await db().rpc('usar_invitacion', { p_codigo: codigo, p_nombre: nombre });
+  if (error) throw new Error(error.message);
+  return data as string;
+}
+
+export function guardarMiembro(m0: Miembro) {
+  const m = foto(m0);
+  escribir('guardar las funciones delegadas', () =>
+    db().from('membresias').update({ delegado_agenda: m.delegadoAgenda, delegado_aprobaciones: m.delegadoAprobaciones }).eq('id', m.id),
+  );
+}
+
+export function registrarColaborador(c0: Colaborador, fotos: { rostro: ArchivoLocal; cedula: ArchivoLocal }) {
+  const c = foto(c0);
+  let subidas = true;
+  escribir('subir la foto de rostro', async () => {
+    const r = await subir(c.fotoRostro!, fotos.rostro);
+    if (r.error) subidas = false;
+    return r;
+  });
+  escribir('subir la foto de la cédula', async () => {
+    if (!subidas) return { error: null };
+    const r = await subir(c.fotoCedula!, fotos.cedula);
+    if (r.error) subidas = false;
+    return r;
+  });
+  escribir('registrar el colaborador', async () => {
+    if (!subidas) return { error: { message: 'primero hay que subir las dos fotos. Inténtalo de nuevo.' } };
+    return db().from('colaboradores').insert({
+      id: c.id, campana_id: c.candidato, lider: c.lider, nombre: c.nombre, cedula: c.cedula, celular: c.celular ?? null,
+      fecha_nacimiento: c.fechaNacimiento, barrio: c.barrio ?? null, barrio_texto: c.barrioTexto, ayuda_en: c.ayudaEn,
+      foto_rostro_url: c.fotoRostro, foto_cedula_url: c.fotoCedula, autorizacion_firmada: c.autorizacion,
+    });
+  });
+}
+
+export function verificarColaborador(c0: Colaborador, aprobadoPor?: string) {
+  const c = foto(c0);
+  escribir('guardar la verificación', () =>
+    db().from('colaboradores').update({ estado: c.estado, aprobado_por: aprobadoPor ?? null }).eq('id', c.id),
+  );
+}
+
+export function guardarTarea(t0: Tarea) {
+  const t = foto(t0);
+  escribir('asignar la tarea', () =>
+    db().from('tareas').insert({
+      id: t.id, campana_id: t.candidato, grupo: t.grupo, titulo: t.titulo, asignada_a: t.asignadaA, asignada_por: t.asignadaPor ?? null,
+      fecha_limite: t.fechaLimite ?? null, evidencia: t.evidencia,
+    }),
+  );
+}
+
+export function reportarTarea(t0: Tarea, fotos: ArchivoLocal[]) {
+  const t = foto(t0);
+  const r = t.reporte!;
+  let subidas = true;
+  fotos.forEach((f, i) =>
+    escribir('subir la foto de evidencia', async () => {
+      if (!subidas) return { error: null };
+      const res = await subir(r.fotos[i], f);
+      if (res.error) subidas = false;
+      return res;
+    }),
+  );
+  escribir('enviar el reporte', async () => {
+    if (!subidas) return { error: { message: 'no se subieron las fotos. Inténtalo de nuevo.' } };
+    return db().from('tareas').update({
+      estado: 'reportada', reporte_notas: r.notas, reporte_cantidad: r.cantidad ?? null, reporte_participantes: r.participantes,
+      reporte_fotos: r.fotos, reportada_el: r.fecha,
+    }).eq('id', t.id);
+  });
+}
+
+export function guardarSolicitud(v0: SolicitudVisita) {
+  const v = foto(v0);
+  escribir(v.estado === 'pendiente' ? 'proponer la visita' : 'guardar la visita', () =>
+    db().from('solicitudes_visita').upsert({
+      id: v.id, campana_id: v.candidato, propuesta_por: v.propuestaPor, lugar: v.lugar, fecha: v.fecha, ...filaAlcance(v.comunidad),
+      asistentes_esperados: v.asistentesEsperados ?? null, temas: v.temas, estado: v.estado, actividad_id: v.actividad ?? null,
+      motivo: v.motivo ?? null,
+    }),
+  );
 }

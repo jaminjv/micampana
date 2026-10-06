@@ -4,7 +4,7 @@ import { Tabs } from 'expo-router/js-tabs';
 
 import { Ionicons } from '@/components/ui';
 import { useApp } from '@/state/app';
-import { colors } from '@/theme';
+import { colors, fuentes } from '@/theme';
 
 /** Pestañas de la versión ciudadano. Sin registro, lleva al registro. */
 export default function CiudadanoLayout() {
@@ -17,7 +17,7 @@ export default function CiudadanoLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 12, fontFamily: fuentes.semibold },
         tabBarStyle: Platform.OS === 'web' ? { borderTopColor: colors.border, height: 64, paddingBottom: 8 } : { borderTopColor: colors.border },
       }}>
       <Tabs.Screen name="feed" options={{ title: 'Inicio', tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size} /> }} />

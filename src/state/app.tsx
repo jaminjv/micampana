@@ -6,9 +6,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import * as remoto from '@/data/remoto';
-import { asistir, enviarAporte as guardarAporte, getCandidato, guardarCampana, seguir, useDatos } from '@/data/repo';
+import {
+  asistir, enviarAporte as guardarAporte, getCandidato, getMiembro, guardarCampana, seguir, useDatos, usarInvitacion,
+} from '@/data/repo';
 import type {
-  ArchivoLocal, Candidato, Cargo, Ciudadano, Etapa, ModoUso, TipoAporte, TipoAval, TipoLista, Tema,
+  ArchivoLocal, Candidato, Cargo, Ciudadano, Miembro, Etapa, ModoUso, TipoAporte, TipoAval, TipoLista, Tema,
 } from '@/data/types';
 
 /** Borrador del registro de un aspirante o candidato, paso a paso. */
@@ -57,14 +59,20 @@ interface AppState {
   campanaId: string | null;
   confirmarCandidatura: (b?: BorradorCandidatura) => void;
   cargarBorrador: (b: BorradorCandidatura) => void;
-  /** Entra como una campaña de prueba con datos, para conocer las herramientas. */
-  entrarComoDemo: () => void;
+  /** Entra a la campaña de prueba con datos, como candidata, coordinador o líder. */
+  entrarComoDemo: (rol?: 'candidato' | 'coordinador' | 'lider') => void;
+
+  /** Membresía en el equipo de una campaña (coordinador, líder o marketing). */
+  miembroId: string | null;
+  /** Se une a una campaña con un código de invitación. */
+  unirseConCodigo: (codigo: string, nombre: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppState | null>(null);
 
 const BORRADOR_VACIO: BorradorCandidatura = { partidos: [] };
 const CAMPANA_DEMO = 'k1';
+const MIEMBRO_DEMO = { coordinador: 'q1', lider: 'l1' } as const;
 
 /** Datos de una campaña existente en el formato del registro paso a paso. */
 function borradorDe(c: Candidato): BorradorCandidatura {
@@ -83,6 +91,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [borrador, setBorrador] = useState<BorradorCandidatura>(BORRADOR_VACIO);
   const [candidatura, setCandidatura] = useState<BorradorCandidatura | null>(null);
   const [campanaId, setCampanaId] = useState<string | null>(null);
+  const [miembroId, setMiembroId] = useState<string | null>(null);
   const [carga, setCarga] = useState<Carga>({ estado: remoto.conectado ? 'cargando' : 'lista' });
 
   const cargar = useCallback((silencioso?: boolean) => {
@@ -95,6 +104,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCiudadano(sesion.ciudadano);
         setMisAportes(sesion.misAportes);
         setCampanaId(sesion.campana?.id ?? null);
+        setMiembroId(sesion.miembro ?? null);
         setCandidatura(sesion.campana ? borradorDe(sesion.campana) : null);
         setCarga({ estado: 'lista' });
       })
@@ -168,14 +178,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCandidatura({ ...datos, soporte: undefined });
       },
       cargarBorrador: (b) => setBorrador(b),
-      entrarComoDemo: () => {
+      entrarComoDemo: (rol = 'candidato') => {
+        if (rol !== 'candidato') {
+          setMiembroId(MIEMBRO_DEMO[rol]);
+          return;
+        }
         const c = getCandidato(CAMPANA_DEMO);
         if (!c) return;
         setCampanaId(c.id);
         setCandidatura(borradorDe(c));
       },
+
+      miembroId,
+      unirseConCodigo: async (codigo, nombre) => {
+        const id = await usarInvitacion(codigo, nombre);
+        // Con Supabase hay que traer los datos de la campaña a la que se unió.
+        if (remoto.conectado) await cargar(true);
+        setMiembroId(id);
+      },
     }),
-    [carga, cargar, ciudadano, misAportes, borrador, candidatura, campanaId],
+    [carga, cargar, ciudadano, misAportes, borrador, candidatura, campanaId, miembroId],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
@@ -192,4 +214,11 @@ export function useMiCampana(): Candidato | undefined {
   const { campanaId } = useApp();
   useDatos();
   return campanaId ? getCandidato(campanaId) : undefined;
+}
+
+/** La membresía de quien usa la app en el equipo de una campaña; se actualiza con cada cambio. */
+export function useMiMiembro(): Miembro | undefined {
+  const { miembroId } = useApp();
+  useDatos();
+  return getMiembro(miembroId ?? undefined);
 }

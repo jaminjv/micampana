@@ -18,6 +18,7 @@ const ITEMS: Item[] = [
   { titulo: 'Panel', icon: 'grid', destino: '/campana', rutas: ['/campana'] },
   { titulo: 'Agenda', icon: 'calendar', destino: '/campana/agenda', rutas: ['/campana/agenda', '/campana/actividad'], soloCandidato: true },
   { titulo: 'Compromisos', icon: 'checkmark-done', destino: '/campana/compromisos', rutas: ['/campana/compromisos', '/campana/compromiso'], soloCandidato: true },
+  { titulo: 'Equipo', icon: 'people', destino: '/campana/equipo', rutas: ['/campana/equipo', '/colaboradores', '/invitar'] },
   { titulo: 'Voces ciudadanas', icon: 'chatbubbles', destino: '/campana/voces', rutas: ['/campana/voces'] },
   { titulo: 'Propuestas', icon: 'document-text', destino: '/campana/propuestas', rutas: ['/campana/propuestas', '/campana/propuesta'], soloCandidato: true },
   { titulo: 'Publicar en el feed', icon: 'newspaper', destino: '/campana/publicar', rutas: ['/campana/publicar'], soloCandidato: true },

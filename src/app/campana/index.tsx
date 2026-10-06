@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Card, Ionicons, Notice, Row, Screen, Small, Title, type IconName } from '@/components/ui';
 import { CARGOS, nombreDepartamento, nombreMunicipio, nombrePartido } from '@/data/catalogos';
 import { ListaActividades } from '@/components/agenda';
-import { agendaDe, agendaDelDia, aportesDeCampana, compromisosDe, propuestasDeCampana } from '@/data/repo';
+import { agendaDe, agendaDelDia, aportesDeCampana, compromisosDe, miembrosDe, propuestasDeCampana, solicitudesDe } from '@/data/repo';
 import { diaRelativo, fechaLarga, horaTexto } from '@/lib/fechas';
 import { useApp, useMiCampana } from '@/state/app';
 import { colors, radius, shadow } from '@/theme';
@@ -24,7 +24,7 @@ const HERRAMIENTAS: Herramienta[] = [
   { icon: 'chatbubbles', titulo: 'Ideas ciudadanas', texto: 'Lo que te escribe la gente', aspirante: true, destino: '/campana/voces' },
   { icon: 'stats-chart', titulo: 'Sondeos', texto: 'Pregunta a tu región', aspirante: true },
   { icon: 'person-circle', titulo: 'Mi perfil', texto: 'Perfil público y QR', aspirante: true },
-  { icon: 'people', titulo: 'Equipo', texto: 'Coordinadores y líderes', aspirante: true },
+  { icon: 'people', titulo: 'Equipo', texto: 'Coordinadores y líderes', aspirante: true, destino: '/campana/equipo' },
   { icon: 'document-text', titulo: 'Propuestas', texto: 'Públicas y permanentes', aspirante: false, destino: '/campana/propuestas' },
   { icon: 'newspaper', titulo: 'Publicar en el feed', texto: 'Eventos y mensajes', aspirante: false, destino: '/campana/publicar' },
   { icon: 'calendar', titulo: 'Agenda y visitas', texto: 'Actividades y visitas', aspirante: false, destino: '/campana/agenda' },
@@ -75,6 +75,8 @@ export default function Panel() {
   const manana = new Date(ahora);
   manana.setHours(24, 0, 0, 0);
   const proxima = conAgenda ? agendaDe(campana.id, manana).find((a) => a.tipo === 'visita' && a.estado === 'programada') : undefined;
+  const porConfirmar = conAgenda ? solicitudesDe(campana.id, 'pendiente').length : 0;
+  const equipo = miembrosDe(campana.id).length;
   const abiertos = conAgenda ? compromisosDe(campana.id).filter((m) => m.estado === 'registrado' || m.estado === 'en_estudio').length : 0;
 
   const destinoDe = (h: Herramienta): Href | undefined =>
@@ -82,6 +84,7 @@ export default function Panel() {
   const detalle = (h: Herramienta) => {
     if (h.titulo === 'Ideas ciudadanas' && sinLeer) return `${sinLeer} sin leer`;
     if (h.titulo === 'Mi perfil') return `@${campana.usuario}`;
+    if (h.titulo === 'Equipo' && equipo) return `${equipo} personas`;
     return h.texto;
   };
 
@@ -134,6 +137,13 @@ export default function Panel() {
               <Text style={s.enlace}>Ver agenda</Text>
             </Pressable>
           </Row>
+          {porConfirmar ? (
+            <Pressable accessibilityRole="button" onPress={() => router.push('/campana/agenda')} style={s.confirmar}>
+              <Ionicons name="time" size={20} color={colors.warnFg} />
+              <Text style={s.confirmarTexto}>{porConfirmar === 1 ? '1 visita propuesta por confirmar' : `${porConfirmar} visitas propuestas por confirmar`}</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.warnFg} />
+            </Pressable>
+          ) : null}
           {hoy.length ? (
             <ListaActividades items={hoy} />
           ) : (
@@ -223,6 +233,8 @@ const s = StyleSheet.create({
   etiquetaTexto: { fontSize: 12, fontWeight: '600', color: colors.onNight },
   fecha: { fontSize: 14, color: colors.onNightMuted },
   enlace: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  confirmar: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.md, backgroundColor: colors.warnBg },
+  confirmarTexto: { flex: 1, fontSize: 15, fontWeight: '600', color: colors.warnFg },
   hola: { fontSize: 28, fontWeight: '700', color: colors.onNight, letterSpacing: -0.3 },
   aval: { fontSize: 14, color: colors.onNightMuted },
   stats: { flexDirection: 'row', gap: 8, marginTop: 6 },
