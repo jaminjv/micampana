@@ -20,6 +20,7 @@ El nombre se cambia en `src/config.ts` y `app.json`. La identidad visual (colore
 | Cuenta con celular (código SMS): asegurar la cuenta anónima del teléfono con el número, o entrar desde otro teléfono y recuperar los datos | Hecho; falta activar un proveedor de SMS en Supabase |
 | Subir el aval o la constancia (PDF o foto) al registrarse como candidato o al pasar de aspirante a candidato, en almacenamiento privado | Hecho |
 | Equipo de campaña: códigos de invitación (coordinador y líder comunal, con territorio y funciones delegadas), coordinador (aprobar colaboradores, validar visitas, asignar tareas), líder (registrar colaboradores con foto y cédula, cupo, reportar tareas con foto de evidencia, proponer visitas) y vista Equipo del candidato | Hecho y probado con PostgREST local |
+| Reacciones (manito arriba y abajo) y comentarios en las publicaciones del feed; el candidato ve los totales en Publicaciones, responde como campaña y puede ocultar comentarios ofensivos | Hecho y probado con PostgREST local |
 | Versión de marketing | Pendiente |
 | Agenda del candidato (hoy, próximas y pasadas; visitas con asistencia y notas; aviso de cruces; publicar como evento) y compromisos con comunidades (desde visitas o aportes, estados, convertir en propuesta) | Hecho |
 | Sondeos y marketing (lado candidato) | Pendiente |
@@ -55,7 +56,7 @@ El React Compiler está apagado en `app.json` (`experiments.reactCompiler`) porq
 Sin las variables de `.env`, la app usa los datos de prueba. Con ellas, carga y guarda todo en tu proyecto de Supabase.
 
 1. Crea un proyecto en [supabase.com](https://supabase.com).
-2. En **SQL Editor**, ejecuta en este orden, cada archivo completo: `supabase/migrations/0001_esquema_inicial.sql`, `supabase/migrations/0002_conexion_app.sql`, `supabase/migrations/0003_agenda_compromisos.sql`, `supabase/migrations/0004_soportes.sql`, `supabase/migrations/0005_equipo.sql` y `supabase/seed.sql`. Si ya tenías la base de datos, ejecuta solo las migraciones nuevas (cada una dice en su encabezado después de cuál va).
+2. En **SQL Editor**, ejecuta en este orden, cada archivo completo: `supabase/migrations/0001_esquema_inicial.sql`, `supabase/migrations/0002_conexion_app.sql`, `supabase/migrations/0003_agenda_compromisos.sql`, `supabase/migrations/0004_soportes.sql`, `supabase/migrations/0005_equipo.sql`, `supabase/migrations/0006_reacciones_comentarios.sql` y `supabase/seed.sql`. Si ya tenías la base de datos, ejecuta solo las migraciones nuevas (cada una dice en su encabezado después de cuál va).
 3. En **Authentication → Sign In / Providers**, activa **Allow anonymous sign-ins**. Mientras no esté el ingreso por SMS, cada teléfono entra con una cuenta anónima que se conserva en el aparato (si se borran los datos de la app, se pierde).
 4. En **Project Settings → API**, copia la **Project URL** y la clave pública (**anon** / **publishable**). Copia `.env.example` como `.env` y pon ahí esos dos valores. Nunca pongas la clave `service_role`: esa da acceso total y no debe ir en la app.
 5. Detén la app (`Ctrl + C`) y vuelve a abrirla con `npx expo start`.

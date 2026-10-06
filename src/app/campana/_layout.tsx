@@ -21,7 +21,7 @@ const ITEMS: Item[] = [
   { titulo: 'Equipo', icon: 'people', destino: '/campana/equipo', rutas: ['/campana/equipo', '/colaboradores', '/invitar'] },
   { titulo: 'Voces ciudadanas', icon: 'chatbubbles', destino: '/campana/voces', rutas: ['/campana/voces'] },
   { titulo: 'Propuestas', icon: 'document-text', destino: '/campana/propuestas', rutas: ['/campana/propuestas', '/campana/propuesta'], soloCandidato: true },
-  { titulo: 'Publicar en el feed', icon: 'newspaper', destino: '/campana/publicar', rutas: ['/campana/publicar'], soloCandidato: true },
+  { titulo: 'Publicaciones', icon: 'newspaper', destino: '/campana/publicaciones', rutas: ['/campana/publicaciones', '/campana/publicar', '/comentarios'], soloCandidato: true },
 ];
 
 /**

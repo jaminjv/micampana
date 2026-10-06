@@ -7,6 +7,7 @@ import { cargoConTerritorio, getCandidato, getEvento, getPropuesta, textoAval } 
 import type { Candidato, Propuesta, Publicacion } from '@/data/types';
 import { diaCorto, fechaCorta, hace, horaTexto } from '@/lib/fechas';
 import { colors, radius, shadow } from '@/theme';
+import { BarraReacciones, ComentariosRecientes } from './comentarios';
 import { Avatar, Badge, Button, Ionicons, Row, VerifiedMark } from './ui';
 import { Text } from './Texto';
 
@@ -86,12 +87,16 @@ export function PropuestaCard({ p }: { p: Propuesta }) {
 
 interface PostProps {
   pub: Publicacion;
+  /** Vista del candidato: ve los totales pero no reacciona a lo suyo. */
+  soloLectura?: boolean;
+  /** En la pantalla de comentarios no se repiten los últimos bajo la publicación. */
+  sinRecientes?: boolean;
   asistire: boolean;
   onAsistire: (eventoId: string) => void;
 }
 
 /** Publicación del feed: evento (con "Asistiré"), propuesta o mensaje. */
-export function PostCard({ pub, asistire, onAsistire }: PostProps) {
+export function PostCard({ pub, asistire, onAsistire, soloLectura, sinRecientes }: PostProps) {
   const c = getCandidato(pub.candidato);
   if (!c) return null;
   const etiqueta = pub.tipo === 'evento' ? 'Evento' : pub.tipo === 'propuesta' ? 'Propuesta' : 'Mensaje';
@@ -116,6 +121,8 @@ export function PostCard({ pub, asistire, onAsistire }: PostProps) {
       {pub.tipo === 'evento' ? <EventoBody pub={pub} asistire={asistire} onAsistire={onAsistire} /> : null}
       {pub.tipo === 'propuesta' ? <PropuestaBody id={pub.propuesta} /> : null}
       {pub.tipo === 'mensaje' ? <Text style={[s.body, s.pad]}>{pub.texto}</Text> : null}
+      <BarraReacciones pub={pub.id} soloLectura={soloLectura} />
+      {sinRecientes ? null : <ComentariosRecientes pub={pub.id} />}
     </View>
   );
 }

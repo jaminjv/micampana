@@ -8,12 +8,12 @@ import { useSyncExternalStore } from 'react';
 
 import { CARGOS, municipiosDe, nombreDepartamento, nombreMunicipio, nombrePartido, ZONAS, zonasDe } from './catalogos';
 import {
-  ACTIVIDADES, APORTES, CANDIDATOS, COLABORADORES, COMPROMISOS, EVENTOS, INVITACIONES, MIEMBROS, PROPUESTAS, PUBLICACIONES,
-  SOLICITUDES_VISITA, TAREAS,
+  ACTIVIDADES, APORTES, CANDIDATOS, COLABORADORES, COMENTARIOS, COMPROMISOS, EVENTOS, INVITACIONES, MIEMBROS, PROPUESTAS, PUBLICACIONES,
+  REACCIONES, SOLICITUDES_VISITA, TAREAS,
 } from './mock';
 import * as remoto from './remoto';
 import type {
-  Actividad, Alcance, Aporte, ArchivoLocal, Colaborador, EstadoColaborador, Invitacion, Miembro, ReporteTarea, RolEquipo,
+  Actividad, Alcance, Aporte, ArchivoLocal, Colaborador, Comentario, Reacciones, EstadoColaborador, Invitacion, Miembro, ReporteTarea, RolEquipo,
   SolicitudVisita, Tarea, Compromiso, EstadoCompromiso, Candidato, Cargo, Etapa, Evento, ModoUso, Propuesta, Publicacion, Tema, TipoAporte, TipoAval,
   TipoLista, Ubicacion,
 } from './types';
@@ -419,6 +419,79 @@ export function seguir(candidato: string, si: boolean) {
 
 export function asistir(evento: string, si: boolean) {
   remoto.asistir(evento, si);
+}
+
+/* ---------- Reacciones y comentarios en el feed ---------- */
+
+export const MAX_COMENTARIO = 500;
+
+export const getPublicacion = (id: string) => PUBLICACIONES.find((p) => p.id === id);
+
+/** Publicaciones de una campaña, la más reciente primero. */
+export const publicacionesDe = (candidato: string) =>
+  PUBLICACIONES.filter((p) => p.candidato === candidato).sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+export const reaccionesDe = (publicacion: string): Reacciones => REACCIONES[publicacion] ?? { aFavor: 0, enContra: 0 };
+
+/** Manito arriba (1) o abajo (-1). Tocar la misma otra vez la quita. */
+export function reaccionar(publicacion: string, valor: 1 | -1) {
+  const r = (REACCIONES[publicacion] ??= { aFavor: 0, enContra: 0 });
+  const antes = r.mia;
+  if (antes === 1) r.aFavor--;
+  if (antes === -1) r.enContra--;
+  r.mia = antes === valor ? undefined : valor;
+  if (r.mia === 1) r.aFavor++;
+  if (r.mia === -1) r.enContra++;
+  remoto.reaccionar(publicacion, r.mia, antes);
+  avisar();
+}
+
+/**
+ * Comentarios en orden de llegada. Los ocultos por la campaña solo los ven su
+ * autor y el candidato (conOcultos).
+ */
+export function comentariosDe(publicacion: string, conOcultos = false): Comentario[] {
+  return COMENTARIOS.filter((c) => c.publicacion === publicacion && (!c.oculto || c.mio || conOcultos)).sort((a, b) =>
+    a.fecha.localeCompare(b.fecha),
+  );
+}
+
+/** "Rosa Cárdenas" → "Rosa C.": en público se muestra el nombre corto. */
+export function nombreCorto(nombre: string) {
+  const [a, b] = nombre.trim().split(/\s+/);
+  return b ? `${a} ${b[0]}.` : (a ?? '');
+}
+
+/** Comentar como ciudadano (nombre corto y barrio) o como la campaña de la publicación. */
+export function comentar(publicacion: string, texto: string, autor: { nombre: string; lugar?: string; deCampana: boolean }) {
+  const t = texto.trim();
+  if (!t) throw new Error('Escribe tu comentario.');
+  if (t.length > MAX_COMENTARIO) throw new Error(`El comentario puede tener hasta ${MAX_COMENTARIO} caracteres.`);
+  const c: Comentario = {
+    id: nuevoId(), publicacion, texto: t, fecha: new Date().toISOString(), mio: true, oculto: false,
+    deCampana: autor.deCampana, autor: autor.deCampana ? autor.nombre : nombreCorto(autor.nombre), lugar: autor.deCampana ? undefined : autor.lugar,
+  };
+  COMENTARIOS.push(c);
+  remoto.comentar(c);
+  avisar();
+  return c;
+}
+
+export function borrarComentario(id: string) {
+  const i = COMENTARIOS.findIndex((c) => c.id === id && c.mio);
+  if (i < 0) return;
+  COMENTARIOS.splice(i, 1);
+  remoto.borrarComentario(id);
+  avisar();
+}
+
+/** El candidato oculta (o vuelve a mostrar) un comentario ofensivo en sus publicaciones. */
+export function ocultarComentario(id: string, oculto: boolean) {
+  const c = COMENTARIOS.find((x) => x.id === id);
+  if (!c) return;
+  c.oculto = oculto;
+  remoto.ocultarComentario(id, oculto);
+  avisar();
 }
 
 /* ---------- Agenda (interna de la campaña) ---------- */

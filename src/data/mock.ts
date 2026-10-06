@@ -4,7 +4,8 @@
  * no esté conectado Supabase (al recargar se reinicia).
  */
 import type {
-  Actividad, Aporte, Candidato, Colaborador, Compromiso, Evento, Invitacion, Miembro, Propuesta, Publicacion, SolicitudVisita, Tarea,
+  Actividad, Aporte, Candidato, Colaborador, Comentario, Compromiso, Evento, Invitacion, Miembro, Propuesta, Publicacion, Reacciones,
+  SolicitudVisita, Tarea,
 } from './types';
 
 export const CANDIDATOS: Candidato[] = [
@@ -102,6 +103,22 @@ export const PUBLICACIONES: Publicacion[] = [
 ];
 
 /** Aportes de ciudadanos. a1 y a2 son del ciudadano de prueba que usa la app. */
+/** Reacciones por id de publicación. */
+export const REACCIONES: Record<string, Reacciones> = {
+  f1: { aFavor: 48, enContra: 3 },
+  f2: { aFavor: 21, enContra: 6 },
+  f3: { aFavor: 35, enContra: 1, mia: 1 },
+};
+
+export const COMENTARIOS: Comentario[] = [
+  { id: 'cm1', publicacion: 'f1', autor: 'Rosa C.', lugar: 'Barrio El Prado', deCampana: false, mio: false, oculto: false,
+    texto: '¡Allá estaremos! Ojalá hablen también del parque.', fecha: haceHoras(1.5) },
+  { id: 'cm2', publicacion: 'f1', autor: 'Laura Gómez', deCampana: true, mio: false, oculto: false,
+    texto: 'Claro que sí, Rosa. El parque está en la agenda.', fecha: haceHoras(1) },
+  { id: 'cm3', publicacion: 'f3', autor: 'Andrés M.', lugar: 'Barrio Centro', deCampana: false, mio: false, oculto: false,
+    texto: 'Gracias por tenernos en cuenta.', fecha: haceHoras(20) },
+];
+
 export const APORTES: Aporte[] = [
   { id: 'a1', candidato: 'k1', lugar: 'Barrio El Prado', tipo: 'idea', tema: 'Empleo', estado: 'respondido', fecha: haceHoras(96),
     texto: 'Ferias de empleo en los colegios para los que terminan el bachillerato.',

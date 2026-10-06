@@ -26,7 +26,7 @@ const HERRAMIENTAS: Herramienta[] = [
   { icon: 'person-circle', titulo: 'Mi perfil', texto: 'Perfil público y QR', aspirante: true },
   { icon: 'people', titulo: 'Equipo', texto: 'Coordinadores y líderes', aspirante: true, destino: '/campana/equipo' },
   { icon: 'document-text', titulo: 'Propuestas', texto: 'Públicas y permanentes', aspirante: false, destino: '/campana/propuestas' },
-  { icon: 'newspaper', titulo: 'Publicar en el feed', texto: 'Eventos y mensajes', aspirante: false, destino: '/campana/publicar' },
+  { icon: 'newspaper', titulo: 'Publicaciones', texto: 'Publicar, reacciones y comentarios', aspirante: false, destino: '/campana/publicaciones' },
   { icon: 'calendar', titulo: 'Agenda y visitas', texto: 'Actividades y visitas', aspirante: false, destino: '/campana/agenda' },
   { icon: 'checkmark-done', titulo: 'Compromisos', texto: 'Lo que acordaste en territorio', aspirante: false, destino: '/campana/compromisos' },
   { icon: 'images', titulo: 'Marketing', texto: 'Material por evento', aspirante: false },

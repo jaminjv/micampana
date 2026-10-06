@@ -132,6 +132,27 @@ export type Publicacion =
   | { id: string; tipo: 'propuesta'; candidato: string; propuesta: string; fecha: string }
   | { id: string; tipo: 'mensaje'; candidato: string; texto: string; fecha: string; alcance?: Alcance };
 
+/** Totales de reacciones de una publicación y la de quien usa la app. */
+export interface Reacciones {
+  aFavor: number;
+  enContra: number;
+  mia?: 1 | -1;
+}
+
+export interface Comentario {
+  id: string;
+  publicacion: string;
+  /** Nombre corto ("Rosa C.") o, si responde la campaña, el nombre del candidato. */
+  autor: string;
+  lugar?: string;
+  deCampana: boolean;
+  texto: string;
+  fecha: string;
+  mio: boolean;
+  /** Ocultado por el candidato: solo lo ven él y su autor. */
+  oculto: boolean;
+}
+
 export interface Aporte {
   id: string;
   candidato: string;

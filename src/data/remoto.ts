@@ -10,11 +10,11 @@
 import { supabase } from '@/lib/supabase';
 import { DEPARTAMENTOS, MUNICIPIOS, PARTIDOS, ZONAS } from './catalogos';
 import {
-  ACTIVIDADES, APORTES, CANDIDATOS, COLABORADORES, COMPROMISOS, EVENTOS, INVITACIONES, MIEMBROS, PROPUESTAS, PUBLICACIONES,
-  SOLICITUDES_VISITA, TAREAS,
+  ACTIVIDADES, APORTES, CANDIDATOS, COLABORADORES, COMENTARIOS, COMPROMISOS, EVENTOS, INVITACIONES, MIEMBROS, PROPUESTAS, PUBLICACIONES,
+  REACCIONES, SOLICITUDES_VISITA, TAREAS,
 } from './mock';
 import type {
-  Actividad, Alcance, Aporte, ArchivoLocal, Colaborador, Invitacion, Miembro, SolicitudVisita, Tarea, Compromiso, Candidato, Ciudadano, Evento, Propuesta, Publicacion, Zona,
+  Actividad, Alcance, Aporte, ArchivoLocal, Colaborador, Comentario, Invitacion, Miembro, SolicitudVisita, Tarea, Compromiso, Candidato, Ciudadano, Evento, Propuesta, Publicacion, Zona,
 } from './types';
 
 export const conectado = !!supabase;
@@ -130,6 +130,11 @@ function publicacionDe(r: any): Publicacion | null {
   return null;
 }
 
+const comentarioDe = (r: any): Comentario => ({
+  id: r.id, publicacion: r.publicacion_id, autor: r.autor_nombre, lugar: r.lugar ?? undefined, deCampana: !!r.de_campana,
+  texto: r.texto, fecha: r.creado, mio: r.perfil_id === uid, oculto: !!r.oculto,
+});
+
 const aporteDe = (r: any): Aporte => ({
   id: r.id, candidato: r.campana_id, lugar: r.lugar ?? '', tipo: r.tipo, tema: r.tema, texto: r.texto,
   estado: r.estado, fecha: r.creado, respuesta: r.respuesta ?? undefined,
@@ -223,7 +228,7 @@ export async function cargarTodo(): Promise<SesionRemota> {
   if (!uid) throw new Error('No se pudo iniciar sesión.');
 
   const [partidos, deps, muns, zonas, campanas, propuestas, eventos, pubs, aportes, perfiles, sigo, voy, agenda, compromisos,
-    membresias, invitaciones, colaboradores, tareas, solicitudes] =
+    membresias, invitaciones, colaboradores, tareas, solicitudes, misReacciones, comentarios] =
     await Promise.all([
       leer(sb.from('partidos').select('id, nombre, sigla').eq('vigente', true).order('nombre'), 'los partidos'),
       leer(sb.from('departamentos').select('codigo, nombre').order('nombre'), 'los departamentos'),
@@ -250,6 +255,8 @@ export async function cargarTodo(): Promise<SesionRemota> {
       leer(sb.from('colaboradores').select('*'), 'los colaboradores'),
       leer(sb.from('tareas').select('*'), 'las tareas'),
       leer(sb.from('solicitudes_visita').select('*'), 'las visitas propuestas'),
+      leer(sb.from('reacciones').select('publicacion_id, valor').eq('perfil_id', uid), 'tus reacciones'),
+      leer(sb.from('comentarios').select('*').order('creado', { ascending: false }).limit(2000), 'los comentarios'),
     ]);
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -274,6 +281,10 @@ export async function cargarTodo(): Promise<SesionRemota> {
   reemplazar(COLABORADORES, colaboradores.map(colaboradorDe));
   reemplazar(TAREAS, tareas.map(tareaDe));
   reemplazar(SOLICITUDES_VISITA, solicitudes.map(solicitudDe));
+  for (const k of Object.keys(REACCIONES)) delete REACCIONES[k];
+  for (const p of pubs as any[]) REACCIONES[p.id] = { aFavor: p.a_favor ?? 0, enContra: p.en_contra ?? 0 };
+  for (const r of misReacciones as any[]) if (REACCIONES[r.publicacion_id]) REACCIONES[r.publicacion_id].mia = r.valor;
+  reemplazar(COMENTARIOS, comentarios.map(comentarioDe));
 
   const perfil: any = perfiles[0];
   const campana = campanas.find((c: any) => c.titular === uid);
@@ -730,4 +741,31 @@ export function guardarSolicitud(v0: SolicitudVisita) {
       db().from('solicitudes_visita').update({ estado: v.estado, actividad_id: v.actividad ?? null, motivo: v.motivo ?? null }).eq('id', v.id),
     );
   }
+}
+
+/* ---------- Reacciones y comentarios ---------- */
+
+/** valor undefined quita la reacción; antes dice si ya había una (update en vez de insert). */
+export function reaccionar(publicacion: string, valor: 1 | -1 | undefined, antes: 1 | -1 | undefined) {
+  escribir('guardar tu reacción', () => {
+    if (!valor) return db().from('reacciones').delete().eq('publicacion_id', publicacion).eq('perfil_id', uid);
+    if (antes) return db().from('reacciones').update({ valor }).eq('publicacion_id', publicacion).eq('perfil_id', uid);
+    return db().from('reacciones').insert({ publicacion_id: publicacion, perfil_id: uid, valor });
+  });
+}
+
+/** El nombre y el barrio de quien comenta los pone la base de datos. */
+export function comentar(c0: Comentario) {
+  const c = foto(c0);
+  escribir('publicar tu comentario', () =>
+    db().from('comentarios').insert({ id: c.id, publicacion_id: c.publicacion, perfil_id: uid, texto: c.texto }),
+  );
+}
+
+export function borrarComentario(id: string) {
+  escribir('borrar el comentario', () => db().from('comentarios').delete().eq('id', id));
+}
+
+export function ocultarComentario(id: string, oculto: boolean) {
+  escribir(oculto ? 'ocultar el comentario' : 'mostrar el comentario', () => db().from('comentarios').update({ oculto }).eq('id', id));
 }
