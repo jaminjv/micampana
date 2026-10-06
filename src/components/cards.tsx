@@ -1,13 +1,14 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { CARGOS } from '@/data/catalogos';
 import { cargoConTerritorio, getCandidato, getEvento, getPropuesta, textoAval } from '@/data/repo';
 import type { Candidato, Propuesta, Publicacion } from '@/data/types';
 import { diaCorto, fechaCorta, hace, horaTexto } from '@/lib/fechas';
-import { colors, radius } from '@/theme';
+import { colors, radius, shadow } from '@/theme';
 import { Avatar, Badge, Button, Ionicons, Row, VerifiedMark } from './ui';
+import { Text } from './Texto';
 
 /** Fila de candidato: avatar, nombre, @usuario, cargo, aval y número. */
 export function CandidatoRow({ c, compacto, destino = 'perfil' }: { c: Candidato; compacto?: boolean; destino?: 'perfil' | 'escribir' }) {
@@ -145,7 +146,7 @@ function EventoBody({ pub, asistire, onAsistire }: PostProps & { pub: Extract<Pu
         </View>
         <Button
           label={asistire ? 'Asistiré ✓' : 'Asistiré'}
-          variant={asistire ? 'secondary' : 'primary'}
+          variant={asistire ? 'secondary' : 'accent'}
           size="md"
           onPress={() => onAsistire(e.id)}
         />
@@ -168,21 +169,21 @@ function PropuestaBody({ id }: { id: string }) {
 
 const s = StyleSheet.create({
   candRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  candCard: { padding: 14, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  candCard: { padding: 16, ...shadow.sm, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   candName: { fontSize: 16, fontWeight: '600', color: colors.ink, flexShrink: 1 },
   user: { fontSize: 13, fontWeight: '600', color: colors.primary },
   meta: { fontSize: 13, color: colors.muted, lineHeight: 18 },
   num: { width: 48, height: 48, borderRadius: 10, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   numLabel: { color: '#FFFFFF', fontSize: 10, fontWeight: '600' },
   numText: { color: '#FFFFFF', fontSize: 20, fontWeight: '800', lineHeight: 22 },
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, gap: 8 },
+  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 18, gap: 10, ...shadow.sm },
   title: { fontSize: 16, fontWeight: '700', color: colors.ink },
   version: { backgroundColor: colors.background, borderRadius: 10, padding: 12, gap: 4 },
   versionLabel: { fontSize: 12, fontWeight: '700', color: colors.muted },
   body: { fontSize: 15, lineHeight: 21, color: colors.inkSoft },
-  post: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, overflow: 'hidden' },
-  postHead: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 },
-  pad: { paddingHorizontal: 14, paddingBottom: 14 },
+  post: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, overflow: 'hidden', ...shadow.sm },
+  postHead: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 18 },
+  pad: { paddingHorizontal: 18, paddingBottom: 18 },
   pieza: { height: 200, backgroundColor: colors.placeholder, alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 },
   evento: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.md, backgroundColor: colors.background },
   fecha: { width: 44, alignItems: 'center' },

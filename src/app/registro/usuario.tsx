@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button, Card, Field, Ionicons, OptionCard, Progress, Screen, Small, Title, TopBar } from '@/components/ui';
 import { APP_NAME } from '@/config';
@@ -7,6 +7,7 @@ import { usuarioOcupado } from '@/data/repo';
 import { useApp } from '@/state/app';
 import { posicion } from '@/state/pasos';
 import { colors } from '@/theme';
+import { Text } from '@/components/Texto';
 
 const FORMATO = /^[a-z0-9_]{3,20}$/;
 
@@ -42,7 +43,7 @@ export default function Usuario() {
             const b = { ...borrador, modo: esCandidato ? modo : undefined };
             confirmarCandidatura(b);
             router.dismissAll();
-            router.replace('/panel');
+            router.replace('/campana');
           }}
         />
       }>

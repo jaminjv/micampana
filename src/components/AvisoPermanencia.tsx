@@ -1,9 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, radius } from '@/theme';
 import { Button, CheckRow, Ionicons, type IconName } from './ui';
+import { Text } from './Texto';
 
 interface Props {
   visible: boolean;

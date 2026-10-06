@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Badge, Button, Card, Ionicons, Notice, Row, Screen, Small, TopBar } from '@/components/ui';
 import { CARGOS } from '@/data/catalogos';
@@ -8,6 +8,7 @@ import type { Propuesta } from '@/data/types';
 import { fechaCorta } from '@/lib/fechas';
 import { useMiCampana } from '@/state/app';
 import { colors, radius } from '@/theme';
+import { Text } from '@/components/Texto';
 
 /** Mis propuestas: borradores por publicar y propuestas publicadas (permanentes). */
 export default function MisPropuestas() {
@@ -15,7 +16,7 @@ export default function MisPropuestas() {
 
   if (!c || c.etapa !== 'candidato') {
     return (
-      <Screen header={<TopBar title="Mis propuestas" />}>
+      <Screen oscura header={<TopBar oscura title="Mis propuestas" />}>
         <Notice icon="lock-closed" tone="warn">
           Las propuestas públicas se habilitan al ser candidato. Como aspirante puedes escuchar ideas y hacer sondeos.
         </Notice>
@@ -31,9 +32,10 @@ export default function MisPropuestas() {
   const departamental = CARGOS[c.cargo].ambito === 'departamento';
 
   return (
-    <Screen
+    <Screen oscura
       header={
         <TopBar
+          oscura
           title="Mis propuestas"
           subtitle={`Perfil público · @${c.usuario}`}
           right={

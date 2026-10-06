@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { ListPicker } from '@/components/ListPicker';
 import { Body, Button, Card, CheckRow, H2, Notice, Progress, Screen, Small, Title, TopBar } from '@/components/ui';
@@ -6,6 +6,7 @@ import { CARGOS, DEPARTAMENTOS, municipiosDe, nombreMunicipio } from '@/data/cat
 import { useApp } from '@/state/app';
 import { posicion, siguiente } from '@/state/pasos';
 import { colors } from '@/theme';
+import { Text } from '@/components/Texto';
 
 /**
  * Territorio. Gobernación y Asamblea: se elige el departamento y sus municipios

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { AlcancePicker, alcanceCompleto } from '@/components/AlcancePicker';
 import {
@@ -11,6 +11,7 @@ import type { Alcance } from '@/data/types';
 import { diaCorto, horaTexto } from '@/lib/fechas';
 import { useMiCampana } from '@/state/app';
 import { colors, type } from '@/theme';
+import { Text } from '@/components/Texto';
 
 type Tipo = 'evento' | 'propuesta' | 'mensaje';
 
@@ -46,7 +47,7 @@ export default function PublicarEnFeed() {
 
   if (!c || c.etapa !== 'candidato') {
     return (
-      <Screen header={<TopBar title="Publicar en el feed" />}>
+      <Screen oscura header={<TopBar oscura title="Publicar en el feed" />}>
         <Notice icon="lock-closed" tone="warn">
           Publicar en el feed se habilita al ser candidato: la ley solo permite propaganda electoral a las candidaturas inscritas.
         </Notice>
@@ -88,7 +89,7 @@ export default function PublicarEnFeed() {
 
   if (listo) {
     return (
-      <Screen background={colors.surface} header={<TopBar title="Publicar en el feed" />}>
+      <Screen oscura background={colors.surface} header={<TopBar oscura title="Publicar en el feed" />}>
         <Notice icon="checkmark-circle" tone="ok">Publicado. Ya está en el feed de los ciudadanos de tu región.</Notice>
         <Body>El feed muestra a todos los candidatos en orden cronológico: nadie aparece primero por pagar más.</Body>
         <Button label="Volver al panel" onPress={() => router.back()} />
@@ -110,9 +111,9 @@ export default function PublicarEnFeed() {
   }
 
   return (
-    <Screen
+    <Screen oscura
       background={colors.surface}
-      header={<TopBar title="Publicar en el feed" />}
+      header={<TopBar oscura title="Publicar en el feed" />}
       footer={<Button label="Publicar" disabled={!valido} onPress={publicar} />}>
       <Segmented<Tipo>
         value={tipo}

@@ -27,7 +27,7 @@ export function siguiente(b: BorradorCandidatura, actual: Paso, actualizando: bo
   const sig = pasos[pasos.indexOf(actual) + 1];
   if (actualizando && (sig === 'usuario' || !sig)) {
     confirmar(b);
-    router.dismissTo('/panel');
+    router.dismissTo('/campana');
     return;
   }
   router.push({ pathname: `/registro/${sig}`, params: actualizando ? { actualizar: '1' } : {} });

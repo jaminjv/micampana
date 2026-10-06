@@ -1,8 +1,8 @@
 /**
  * Configuración general de la app.
- * El nombre es provisional: cambiarlo aquí lo cambia en todas las pantallas.
+ * Cambiar el nombre aquí lo cambia en todas las pantallas (y en app.json, el del ícono).
  */
-export const APP_NAME = 'Mi Campaña';
+export const APP_NAME = 'nexo';
 
 /** Cuando existan estas variables, la app usa Supabase; si no, usa datos de prueba. */
 export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';

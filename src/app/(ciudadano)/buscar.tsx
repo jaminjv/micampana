@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CandidatoRow } from '@/components/cards';
@@ -9,6 +9,7 @@ import { buscarCandidatos } from '@/data/repo';
 import type { Cargo } from '@/data/types';
 import { useApp } from '@/state/app';
 import { colors, radius } from '@/theme';
+import { Text, TextInput } from '@/components/Texto';
 
 /** Directorio de candidatos: por nombre o @usuario, con filtros de región, cargo y partido. */
 export default function Buscar() {

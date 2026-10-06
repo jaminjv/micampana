@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Body, Button, Chip, ChipRow, Field, Notice, Screen, Segmented, Small, Title, TopBar } from '@/components/ui';
 import { nombreMunicipio, nombreZona, TEMAS } from '@/data/catalogos';
@@ -8,6 +8,7 @@ import { getCandidatoPorUsuario } from '@/data/repo';
 import type { Tema, TipoAporte } from '@/data/types';
 import { useApp } from '@/state/app';
 import { colors } from '@/theme';
+import { Text } from '@/components/Texto';
 
 const PLACEHOLDER: Record<TipoAporte, string> = {
   idea: 'Sé concreto: qué propones, para quién y dónde.',
@@ -54,6 +55,7 @@ export default function Escribir() {
       footer={
         <Button
           label="Enviar aporte"
+          variant="accent"
           disabled={!valido}
           onPress={() => {
             const ub = ciudadano.ubicacion;

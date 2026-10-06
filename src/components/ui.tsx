@@ -2,13 +2,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import type { ComponentProps, ReactNode } from 'react';
-import {
-  Pressable, ScrollView, StyleSheet, Text, TextInput, View,
-  type StyleProp, type TextInputProps, type ViewStyle,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
-import { colors, radius, space, TOUCH, type } from '@/theme';
+import { colors, radius, shadow, space, TOUCH, type } from '@/theme';
+import { Text, TextInput } from './Texto';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
 export { Ionicons };
@@ -22,41 +21,50 @@ interface ScreenProps {
   background?: string;
   scroll?: boolean;
   padded?: boolean;
+  /** Parte superior en Azul Noche (vistas del candidato), con la barra de estado clara. */
+  oscura?: boolean;
 }
 
 /** Pantalla con área segura, contenido desplazable y pie fijo opcional. */
-export function Screen({ children, footer, header, background = colors.background, scroll = true, padded = true }: ScreenProps) {
+export function Screen({ children, footer, header, background = colors.background, scroll = true, padded = true, oscura }: ScreenProps) {
   const contenido = padded ? styles.screenPad : undefined;
   return (
-    <SafeAreaView style={[styles.flex, { backgroundColor: background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.flex, { backgroundColor: oscura ? colors.night : background }]} edges={['top', 'left', 'right']}>
+      <StatusBar style={oscura ? 'light' : 'dark'} />
       {header}
-      {scroll ? (
-        <ScrollView style={styles.flex} contentContainerStyle={[contenido, styles.gap16]} keyboardShouldPersistTaps="handled">
-          {children}
-        </ScrollView>
-      ) : (
-        <View style={[styles.flex, contenido, styles.gap16]}>{children}</View>
-      )}
+      <View style={[styles.flex, { backgroundColor: background }]}>
+        {scroll ? (
+          <ScrollView style={styles.flex} contentContainerStyle={[contenido, styles.gap16, padded && styles.ancho]} keyboardShouldPersistTaps="handled">
+            {children}
+          </ScrollView>
+        ) : (
+          <View style={[styles.flex, contenido, styles.gap16, padded && styles.ancho]}>{children}</View>
+        )}
+      </View>
       {footer ? <SafeAreaView edges={['bottom']} style={styles.footer}>{footer}</SafeAreaView> : null}
     </SafeAreaView>
   );
 }
 
-/** Barra superior con botón de volver. */
-export function TopBar({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
+/**
+ * Barra superior con botón de volver. "oscura" (Azul Noche) es la de las
+ * herramientas del candidato; la clara, la del ciudadano.
+ */
+export function TopBar({ title, subtitle, right, oscura }: { title: string; subtitle?: string; right?: ReactNode; oscura?: boolean }) {
+  const tinta = oscura ? colors.onNight : colors.ink;
   return (
-    <View style={styles.topBar}>
+    <View style={[styles.topBar, oscura && styles.topBarOscura]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Volver"
         onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
         style={styles.iconBtn}
         hitSlop={8}>
-        <Ionicons name="chevron-back" size={24} color={colors.ink} />
+        <Ionicons name="chevron-back" size={24} color={tinta} />
       </Pressable>
       <View style={styles.flex}>
-        <Text style={styles.topTitle} accessibilityRole="header">{title}</Text>
-        {subtitle ? <Text style={type.small}>{subtitle}</Text> : null}
+        <Text style={[styles.topTitle, { color: tinta }]} accessibilityRole="header">{title}</Text>
+        {subtitle ? <Text style={[type.small, oscura && { color: colors.onNightMuted }]}>{subtitle}</Text> : null}
       </View>
       {right}
     </View>
@@ -97,7 +105,8 @@ export function Progress({ paso, total, etiqueta }: { paso: number; total: numbe
 interface ButtonProps {
   label: string;
   onPress?: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'whatsapp';
+  /** primary: Azul Eléctrico · accent: Naranja Coral, para el ciudadano. */
+  variant?: 'primary' | 'accent' | 'secondary' | 'ghost' | 'whatsapp';
   disabled?: boolean;
   icon?: IconName;
   size?: 'md' | 'lg';
@@ -106,10 +115,12 @@ interface ButtonProps {
 
 export function Button({ label, onPress, variant = 'primary', disabled, icon, size = 'lg', style }: ButtonProps) {
   const fondo = disabled
-    ? colors.primaryDisabled
+    ? variant === 'secondary' || variant === 'ghost' ? colors.surface : colors.primaryDisabled
     : variant === 'primary' ? colors.primary
+    : variant === 'accent' ? colors.accent
     : variant === 'whatsapp' ? colors.whatsapp
     : variant === 'secondary' ? colors.surface : 'transparent';
+  const presionado = variant === 'primary' ? colors.primaryPressed : variant === 'accent' ? colors.accentPressed : undefined;
   const texto = variant === 'secondary' || variant === 'ghost' ? (disabled ? colors.faint : colors.ink) : '#FFFFFF';
   return (
     <Pressable
@@ -119,7 +130,11 @@ export function Button({ label, onPress, variant = 'primary', disabled, icon, si
       onPress={onPress}
       style={({ pressed }) => [
         styles.btn,
-        { height: size === 'lg' ? 52 : TOUCH, backgroundColor: fondo, opacity: pressed ? 0.85 : 1 },
+        {
+          height: size === 'lg' ? 52 : TOUCH,
+          backgroundColor: pressed && presionado && !disabled ? presionado : fondo,
+          opacity: pressed && !presionado ? 0.85 : 1,
+        },
         variant === 'secondary' && styles.btnSecondary,
         style,
       ]}>
@@ -233,13 +248,14 @@ export const Card = ({ children, style }: { children: ReactNode; style?: StylePr
   <View style={[styles.card, style]}>{children}</View>
 );
 
-type Tono = 'primary' | 'ok' | 'warn' | 'danger' | 'neutral';
+type Tono = 'primary' | 'accent' | 'ok' | 'warn' | 'danger' | 'neutral';
 const TONOS: Record<Tono, [string, string]> = {
-  primary: [colors.primaryTint, colors.primary],
+  primary: [colors.primaryTint, colors.primaryOnTint],
+  accent: [colors.accentTint, colors.accentOnTint],
   ok: [colors.okBg, colors.okFg],
   warn: [colors.warnBg, colors.warnFg],
   danger: [colors.dangerBg, colors.dangerFg],
-  neutral: [colors.background, colors.inkSoft],
+  neutral: [colors.segmented, colors.inkSoft],
 };
 
 export function Badge({ label, tone = 'primary' }: { label: string; tone?: Tono }) {
@@ -286,8 +302,11 @@ export const styles = StyleSheet.create({
   gap8: { gap: 8 },
   gap16: { gap: 16 },
   screenPad: { padding: space.xl, paddingBottom: space.xxxl },
+  /** En pantallas anchas (web), el contenido no se estira más de 760 px. */
+  ancho: { width: '100%', maxWidth: 760, alignSelf: 'center' },
   footer: { backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: space.xl, paddingTop: space.md, paddingBottom: space.md, gap: 10 },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: space.sm, paddingVertical: space.sm, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  topBarOscura: { backgroundColor: colors.night, borderBottomColor: colors.night },
   topTitle: { fontSize: 18, fontWeight: '700', color: colors.ink },
   iconBtn: { width: TOUCH, height: TOUCH, alignItems: 'center', justifyContent: 'center' },
   progressRow: { flexDirection: 'row', gap: 6 },
@@ -310,17 +329,17 @@ export const styles = StyleSheet.create({
   checkboxOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   segmented: { flexDirection: 'row', padding: 4, borderRadius: radius.md, backgroundColor: colors.segmented },
   segItem: { flex: 1, minHeight: 40, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  segItemOn: { backgroundColor: colors.surface },
+  segItemOn: { backgroundColor: colors.surface, ...shadow.sm },
   segText: { fontSize: 14, color: colors.muted, fontWeight: '500' },
   segTextOn: { color: colors.ink, fontWeight: '600' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { minHeight: 38, paddingHorizontal: 14, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.inputBorder, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   chipOn: { backgroundColor: colors.primaryTint, borderColor: colors.primaryTint },
-  chipDark: { backgroundColor: colors.ink, borderColor: colors.ink },
+  chipDark: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: { fontSize: 14, color: colors.inkSoft },
-  chipTextOn: { color: colors.primary, fontWeight: '600' },
+  chipTextOn: { color: colors.primaryOnTint, fontWeight: '600' },
   chipTextDark: { color: '#FFFFFF', fontWeight: '600' },
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: space.lg, gap: 10 },
+  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: space.lg, gap: 10, ...shadow.sm },
   badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
   badgeText: { fontSize: 12, fontWeight: '600' },
   notice: { flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: radius.md },

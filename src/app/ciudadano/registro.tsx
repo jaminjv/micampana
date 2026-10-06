@@ -1,12 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { ListPicker } from '@/components/ListPicker';
 import { Body, Button, Card, CheckRow, Field, H2, Screen, Small, Title, TopBar } from '@/components/ui';
 import { DEPARTAMENTOS, municipiosDe, zonasDe } from '@/data/catalogos';
 import { useApp } from '@/state/app';
 import { colors } from '@/theme';
+import { Text } from '@/components/Texto';
 
 /** Registro del ciudadano: una sola vez, sirve para escribirle a cualquier candidato. */
 export default function RegistroCiudadano() {
@@ -30,6 +31,7 @@ export default function RegistroCiudadano() {
       footer={
         <Button
           label="Crear mi cuenta"
+          variant="accent"
           disabled={!valido}
           onPress={() => {
             registrarCiudadano({

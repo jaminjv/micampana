@@ -1,5 +1,6 @@
+import { Image } from 'expo-image';
 import { useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PostCard } from '@/components/cards';
@@ -9,6 +10,7 @@ import { nombreMunicipio, nombreZona } from '@/data/catalogos';
 import { feedPara, useDatos, type FiltroFeed } from '@/data/repo';
 import { useApp } from '@/state/app';
 import { colors } from '@/theme';
+import { Text } from '@/components/Texto';
 
 const FILTROS: { value: FiltroFeed; label: string }[] = [
   { value: 'todos', label: 'Todos' },
@@ -30,7 +32,7 @@ export default function Feed() {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <View style={s.header}>
-        <Text style={s.app}>{APP_NAME}</Text>
+        <Image source={require('@/../assets/images/logo-nexo.png')} style={s.logo} contentFit="contain" accessibilityLabel={APP_NAME} />
         <Small>{lugar}</Small>
         <View style={s.filtros}>
           {FILTROS.map((f) => (
@@ -68,9 +70,9 @@ export default function Feed() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   header: { backgroundColor: colors.surface, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, gap: 4, borderBottomWidth: 1, borderBottomColor: colors.border },
-  app: { fontSize: 24, fontWeight: '800', color: colors.ink },
+  logo: { width: 96, height: 24 },
   filtros: { flexDirection: 'row', gap: 8, marginTop: 8, flexWrap: 'wrap' },
-  list: { padding: 12, gap: 12 },
+  list: { padding: 20, gap: 16, width: '100%', maxWidth: 760, alignSelf: 'center' },
   empty: { alignItems: 'center', gap: 6, padding: 32 },
   emptyTitle: { fontSize: 16, fontWeight: '600', color: colors.ink, textAlign: 'center' },
   footer: { textAlign: 'center', paddingVertical: 12 },

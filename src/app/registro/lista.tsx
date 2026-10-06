@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Avatar, Body, Button, Card, Field, Progress, Screen, Segmented, Small, Title, TopBar } from '@/components/ui';
 import { CARGOS, nombreDepartamento, nombreMunicipio } from '@/data/catalogos';
@@ -7,6 +7,7 @@ import type { TipoLista } from '@/data/types';
 import { useApp } from '@/state/app';
 import { posicion, siguiente } from '@/state/pasos';
 import { colors } from '@/theme';
+import { Text } from '@/components/Texto';
 
 /** Asamblea y Concejo: tipo de lista y número del candidato en el tarjetón. */
 export default function Lista() {

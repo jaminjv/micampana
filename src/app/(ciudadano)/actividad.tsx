@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CandidatoRow } from '@/components/cards';
@@ -10,6 +10,7 @@ import type { EstadoAporte, TipoAporte } from '@/data/types';
 import { diaCorto, hace, horaTexto } from '@/lib/fechas';
 import { useApp } from '@/state/app';
 import { colors } from '@/theme';
+import { Text } from '@/components/Texto';
 
 const ESTADO: Record<EstadoAporte, { label: string; tone: 'ok' | 'primary' | 'neutral' }> = {
   enviado: { label: 'Enviado', tone: 'neutral' },

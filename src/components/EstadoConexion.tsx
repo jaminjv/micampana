@@ -1,11 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { alFallar } from '@/data/remoto';
 import { useApp } from '@/state/app';
 import { colors, radius } from '@/theme';
 import { Button, Ionicons } from './ui';
+import { Text } from './Texto';
 
 /** Con Supabase: muestra "Cargando" al abrir y un error con "Reintentar" si no se pudo. */
 export function EsperarCarga({ children }: { children: ReactNode }) {

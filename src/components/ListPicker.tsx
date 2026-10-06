@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { colors, radius, TOUCH, type } from '@/theme';
 import { Ionicons } from './ui';
+import { Text, TextInput } from './Texto';
 
 export interface PickerItem {
   id: string;

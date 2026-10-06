@@ -1,10 +1,11 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { CARGOS, municipiosDe, nombreDepartamento, nombreMunicipio, nombreZona, zonasDe } from '@/data/catalogos';
 import type { Alcance, Candidato } from '@/data/types';
 import { colors, type } from '@/theme';
 import { ListPicker } from './ListPicker';
 import { Chip, ChipRow, Segmented, Small } from './ui';
+import { Text } from './Texto';
 
 type Nivel = Alcance['nivel'];
 

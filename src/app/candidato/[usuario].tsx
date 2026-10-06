@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { NumeroTarjeton, PropuestaCard } from '@/components/cards';
 import { Avatar, Badge, Button, Card, Notice, Row, Screen, Segmented, Small, TopBar, VerifiedMark } from '@/components/ui';
@@ -11,6 +11,7 @@ import {
 import { diaCorto, horaTexto } from '@/lib/fechas';
 import { useApp } from '@/state/app';
 import { colors } from '@/theme';
+import { Text } from '@/components/Texto';
 
 /** Perfil público: quién es, qué propone para el territorio del ciudadano y sus eventos. */
 export default function PerfilCandidato() {
@@ -70,6 +71,7 @@ export default function PerfilCandidato() {
         <Row gap={8}>
           <Button
             label="Dejar un mensaje"
+            variant="accent"
             style={{ flex: 2 }}
             size="md"
             onPress={() =>

@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { AlcancePicker, alcanceCompleto } from '@/components/AlcancePicker';
 import { AvisoPermanencia } from '@/components/AvisoPermanencia';
@@ -14,6 +14,7 @@ import {
 import type { Alcance, Tema } from '@/data/types';
 import { useMiCampana } from '@/state/app';
 import { colors, type } from '@/theme';
+import { Text } from '@/components/Texto';
 
 /**
  * Nueva propuesta, borrador por publicar, o propuesta publicada para corregir o retirar.
@@ -34,7 +35,7 @@ export default function EditorPropuesta() {
 
   if (!c || c.etapa !== 'candidato' || (original && original.candidato !== c.id)) {
     return (
-      <Screen header={<TopBar title="Propuesta" />}>
+      <Screen oscura header={<TopBar oscura title="Propuesta" />}>
         <Notice icon="lock-closed" tone="warn">Las propuestas públicas se habilitan al ser candidato.</Notice>
       </Screen>
     );
@@ -46,7 +47,7 @@ export default function EditorPropuesta() {
 
   if (estado === 'retirada' && original) {
     return (
-      <Screen header={<TopBar title="Propuesta retirada" />}>
+      <Screen oscura header={<TopBar oscura title="Propuesta retirada" />}>
         <PropuestaCard p={original} />
         <Small>Una propuesta retirada sigue visible en tu perfil con tu explicación. No se puede borrar ni volver a publicar.</Small>
       </Screen>
@@ -99,9 +100,9 @@ export default function EditorPropuesta() {
   );
 
   return (
-    <Screen
+    <Screen oscura
       background={colors.surface}
-      header={<TopBar title={publicada ? 'Corregir propuesta' : original ? 'Revisar borrador' : 'Nueva propuesta'} />}
+      header={<TopBar oscura title={publicada ? 'Corregir propuesta' : original ? 'Revisar borrador' : 'Nueva propuesta'} />}
       footer={retirando ? undefined : footer}>
       {publicada ? (
         <Notice icon="information-circle" tone="primary">

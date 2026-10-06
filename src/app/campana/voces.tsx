@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Badge, Button, Card, Chip, ChipRow, Field, Notice, Row, Screen, Small, TopBar } from '@/components/ui';
 import { aportesDeCampana, marcarEnRevision, responderAporte } from '@/data/repo';
@@ -8,6 +8,7 @@ import type { Aporte, EstadoAporte, TipoAporte } from '@/data/types';
 import { hace } from '@/lib/fechas';
 import { useMiCampana } from '@/state/app';
 import { colors } from '@/theme';
+import { Text } from '@/components/Texto';
 
 const FILTROS: { value?: TipoAporte; label: string }[] = [
   { label: 'Todas' },
@@ -37,7 +38,7 @@ export default function Voces() {
 
   if (!c) {
     return (
-      <Screen header={<TopBar title="Voces ciudadanas" />}>
+      <Screen oscura header={<TopBar oscura title="Voces ciudadanas" />}>
         <Notice icon="information-circle" tone="primary">Crea tu perfil para recibir aportes de los ciudadanos.</Notice>
         <Button label="Crear mi perfil" onPress={() => router.replace('/registro/etapa')} />
       </Screen>
@@ -48,7 +49,7 @@ export default function Voces() {
   const sinLeer = aportesDeCampana(c.id).filter((a) => a.estado === 'enviado').length;
 
   return (
-    <Screen header={<TopBar title="Voces ciudadanas" subtitle={sinLeer ? `${sinLeer} sin leer` : 'Todo al día'} />}>
+    <Screen oscura header={<TopBar oscura title="Voces ciudadanas" subtitle={sinLeer ? `${sinLeer} sin leer` : 'Todo al día'} />}>
       <ChipRow>
         {FILTROS.map((f) => (
           <Chip key={f.label} label={f.label} dark selected={filtro === f.value} onPress={() => setFiltro(f.value)} />

@@ -1,7 +1,7 @@
 # Mi Campaña
 
-App móvil (Android y iPhone) para gestionar campañas políticas en Colombia y conectar a los candidatos con los ciudadanos.
-El nombre es provisional: se cambia en `src/config.ts` y `app.json`.
+**nexo**: app móvil (Android y iPhone) para gestionar campañas políticas en Colombia y conectar a los candidatos con los ciudadanos.
+El nombre se cambia en `src/config.ts` y `app.json`. La identidad visual (colores, tipografía Outfit, esquinas y sombras) está en `src/theme.ts`; el logo y los íconos, en `assets/images` (`logo-nexo.png`, `icon.png`).
 
 - **Especificación completa:** documento "Mi Campaña — Especificación" (Claude Docs).
 - **Diseño de todas las pantallas:** lienzo "Mi Campaña — Pantallas" (Claude Design).
@@ -81,17 +81,16 @@ src/
   app/                 Pantallas (Expo Router; cada archivo es una ruta)
     index.tsx          Bienvenida
     registro/          Registro de aspirante o candidato, paso a paso
-    panel.tsx          Panel del aspirante o candidato
     ciudadano/         Registro del ciudadano
     (ciudadano)/       Pestañas: feed, aportar, buscar, actividad
-    campana/           Herramientas del candidato: propuestas, publicar en el feed, voces ciudadanas
+    campana/           Panel y herramientas del candidato (propuestas, feed, voces); barra lateral en pantalla ancha
     candidato/         Perfil público del candidato
     escribir/          Escribir un aporte
   components/          Interfaz compartida (ui.tsx, cards.tsx, ListPicker.tsx)
   data/                Tipos, catálogos, datos de prueba y repo.ts (acceso a datos)
   state/               Estado de la sesión y orden de pasos del registro
   lib/                 Cliente de Supabase y fechas
-  theme.ts             Colores y tipografía provisionales (cambiar aquí la identidad)
+  theme.ts             Identidad de nexo: colores, tipografía, esquinas y sombras
   config.ts            Nombre de la app y variables de Supabase
 supabase/
   migrations/          Esquema SQL con permisos por fila
