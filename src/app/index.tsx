@@ -45,6 +45,11 @@ export default function Bienvenida() {
           text="Para coordinadores, líderes y equipos de marketing."
           onPress={() => router.push('/invitacion')}
         />
+        {conectado && !candidatura && !ciudadano ? (
+          <Pressable accessibilityRole="button" onPress={() => router.push('/cuenta')} style={s.demo}>
+            <Text style={s.demoText}>Ya tengo cuenta: entrar con mi celular</Text>
+          </Pressable>
+        ) : null}
         {!candidatura && !conectado ? (
           <Pressable
             accessibilityRole="button"

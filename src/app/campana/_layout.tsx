@@ -80,6 +80,13 @@ function Sidebar() {
               <Text style={s.itemTexto}>Mi perfil público</Text>
             </Pressable>
           ) : null}
+          <Pressable
+            accessibilityRole="menuitem"
+            onPress={() => router.push('/cuenta')}
+            style={({ pressed }) => [s.item, pressed && s.itemPresionado]}>
+            <Ionicons name="phone-portrait" size={20} color={colors.onNightMuted} />
+            <Text style={s.itemTexto}>Tu cuenta</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

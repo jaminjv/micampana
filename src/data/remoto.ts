@@ -475,3 +475,60 @@ export function guardarCompromiso(c0: Compromiso) {
     }),
   );
 }
+
+/* ---------- Cuenta con celular (código SMS) ---------- */
+
+/** Explica en español los errores más comunes del ingreso por SMS. */
+function errorCuenta(e: { code?: string; message: string }): Error {
+  const porCodigo: Record<string, string> = {
+    phone_provider_disabled: 'El ingreso por SMS aún no está activado: falta configurar el proveedor de SMS en Supabase.',
+    sms_send_failed: 'No se pudo enviar el SMS. Revisa el número o inténtalo en unos minutos.',
+    over_sms_send_rate_limit: 'Pediste muchos códigos seguidos. Espera unos minutos e inténtalo de nuevo.',
+    over_request_rate_limit: 'Demasiados intentos. Espera unos minutos.',
+    otp_expired: 'El código no es correcto o ya venció. Pide uno nuevo.',
+    user_not_found: 'No hay una cuenta con ese número.',
+    phone_exists: 'Ese número ya tiene una cuenta.',
+  };
+  return new Error((e.code && porCodigo[e.code]) || e.message);
+}
+
+export interface EstadoCuenta {
+  /** Celular con el que está asegurada la cuenta, si ya lo verificó. */
+  telefono?: string;
+}
+
+export async function estadoCuenta(): Promise<EstadoCuenta> {
+  const { data } = await db().auth.getUser();
+  const tel = data.user?.phone;
+  return { telefono: tel ? `+${tel.replace(/^\+/, '')}` : undefined };
+}
+
+/**
+ * Pide el código por SMS. Si este teléfono tiene una cuenta anónima, el número
+ * se le agrega a esa misma cuenta (no se pierde nada). Si el número ya tiene
+ * una cuenta, se entra a esa otra cuenta.
+ * Devuelve cuál de los dos casos es, para verificar el código igual.
+ */
+export async function enviarCodigo(telefono: string): Promise<'vincular' | 'entrar'> {
+  const sb = db();
+  const { data } = await sb.auth.getUser();
+  if (data.user?.is_anonymous) {
+    const r = await sb.auth.updateUser({ phone: telefono });
+    if (!r.error) return 'vincular';
+    if (r.error.code !== 'phone_exists') throw errorCuenta(r.error);
+  }
+  const r = await sb.auth.signInWithOtp({ phone: telefono, options: { shouldCreateUser: true } });
+  if (r.error) throw errorCuenta(r.error);
+  return 'entrar';
+}
+
+export async function verificarCodigo(telefono: string, codigo: string, modo: 'vincular' | 'entrar') {
+  const r = await db().auth.verifyOtp({ phone: telefono, token: codigo, type: modo === 'vincular' ? 'phone_change' : 'sms' });
+  if (r.error) throw errorCuenta(r.error);
+}
+
+/** Cierra la sesión; al volver a cargar, el teléfono entra con una cuenta anónima nueva. */
+export async function cerrarSesion() {
+  await db().auth.signOut();
+  uid = null;
+}

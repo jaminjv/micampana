@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CandidatoRow } from '@/components/cards';
@@ -77,9 +77,8 @@ export default function Actividad() {
           return c ? <CandidatoRow key={id} c={c} /> : null;
         })}
 
-        <Pressable accessibilityRole="link" onPress={() => {}} style={{ paddingVertical: 8 }}>
-          <Small>Mis datos: consultar, corregir o borrar (próximamente).</Small>
-        </Pressable>
+        <Button label="Tu cuenta y tu celular" variant="secondary" icon="phone-portrait-outline" onPress={() => router.push('/cuenta')} />
+        <Small>Consultar, corregir o borrar tus datos: próximamente.</Small>
         <Button label="Salir al inicio" variant="secondary" onPress={() => router.replace('/')} />
       </ScrollView>
     </SafeAreaView>

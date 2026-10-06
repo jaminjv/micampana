@@ -37,6 +37,8 @@ export type Carga = { estado: 'cargando' } | { estado: 'lista' } | { estado: 'er
 interface AppState {
   carga: Carga;
   reintentarCarga: () => void;
+  /** Vuelve a cargar los datos sin mostrar la pantalla de carga (p. ej. tras entrar con el celular). */
+  recargar: () => Promise<void>;
 
   ciudadano: Ciudadano | null;
   registrarCiudadano: (c: Omit<Ciudadano, 'siguiendo' | 'asistire'>) => void;
@@ -83,29 +85,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [campanaId, setCampanaId] = useState<string | null>(null);
   const [carga, setCarga] = useState<Carga>({ estado: remoto.conectado ? 'cargando' : 'lista' });
 
-  const cargar = useCallback(() => {
-    if (!remoto.conectado) return;
-    setCarga({ estado: 'cargando' });
-    remoto
+  const cargar = useCallback((silencioso?: boolean) => {
+    if (!remoto.conectado) return Promise.resolve();
+    if (!silencioso) setCarga({ estado: 'cargando' });
+    return remoto
       .cargarTodo()
       .then((sesion) => {
+        // Al cambiar de cuenta (p. ej. al entrar con el celular) se reemplaza todo lo anterior.
         setCiudadano(sesion.ciudadano);
         setMisAportes(sesion.misAportes);
-        if (sesion.campana) {
-          setCampanaId(sesion.campana.id);
-          setCandidatura(borradorDe(sesion.campana));
-        }
+        setCampanaId(sesion.campana?.id ?? null);
+        setCandidatura(sesion.campana ? borradorDe(sesion.campana) : null);
         setCarga({ estado: 'lista' });
       })
       .catch((e: unknown) => setCarga({ estado: 'error', mensaje: e instanceof Error ? e.message : String(e) }));
   }, []);
 
-  useEffect(cargar, [cargar]);
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
 
   const value = useMemo<AppState>(
     () => ({
       carga,
-      reintentarCarga: cargar,
+      reintentarCarga: () => {
+        cargar();
+      },
+      recargar: () => cargar(true),
 
       ciudadano,
       registrarCiudadano: (c) => {

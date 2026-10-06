@@ -190,7 +190,8 @@ export default function Panel() {
       ) : null}
 
       <Small>Sondeos, equipo, agenda y marketing se construyen en las siguientes fases.</Small>
-      <Button label="Volver al inicio" variant="secondary" onPress={() => router.replace('/')} />
+      <Button label="Tu cuenta y tu celular" variant="secondary" icon="phone-portrait-outline" onPress={() => router.push('/cuenta')} />
+      <Button label="Volver al inicio" variant="ghost" onPress={() => router.replace('/')} />
       </View>
     </Screen>
   );

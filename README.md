@@ -17,7 +17,7 @@ El nombre se cambia en `src/config.ts` y `app.json`. La identidad visual (colore
 | Versión ciudadano: registro con autorización de datos, feed por región (cronológico y neutral), buscador con filtros (región, cargo, partido incluida coalición), perfil con "¿Qué propone para ti?" por barrio, comuna y ciudad, escribir aportes, mi actividad | Hecho |
 | Esquema de base de datos Supabase con permisos por fila (RLS) | Hecho y probado en PostgreSQL |
 | Conexión a Supabase: carga y guarda campañas, propuestas (con versiones y lecturas), feed, eventos, aportes, seguidores y "Asistiré" | Hecho y probado con PostgREST local |
-| Ingreso por celular con código SMS (hoy cada teléfono entra con una cuenta anónima) | Pendiente |
+| Cuenta con celular (código SMS): asegurar la cuenta anónima del teléfono con el número, o entrar desde otro teléfono y recuperar los datos | Hecho; falta activar un proveedor de SMS en Supabase |
 | Subir el aval o la constancia (PDF o foto) al registrarse como candidato o al pasar de aspirante a candidato, en almacenamiento privado | Hecho |
 | Versiones de coordinador, líder comunal y marketing | Pendiente |
 | Agenda del candidato (hoy, próximas y pasadas; visitas con asistencia y notas; aviso de cruces; publicar como evento) y compromisos con comunidades (desde visitas o aportes, estados, convertir en propuesta) | Hecho |
@@ -58,6 +58,16 @@ Sin las variables de `.env`, la app usa los datos de prueba. Con ellas, carga y 
 3. En **Authentication → Sign In / Providers**, activa **Allow anonymous sign-ins**. Mientras no esté el ingreso por SMS, cada teléfono entra con una cuenta anónima que se conserva en el aparato (si se borran los datos de la app, se pierde).
 4. En **Project Settings → API**, copia la **Project URL** y la clave pública (**anon** / **publishable**). Copia `.env.example` como `.env` y pon ahí esos dos valores. Nunca pongas la clave `service_role`: esa da acceso total y no debe ir en la app.
 5. Detén la app (`Ctrl + C`) y vuelve a abrirla con `npx expo start`.
+
+### Activar el ingreso con código SMS
+
+Mientras no lo actives, la app funciona con cuentas anónimas y la pantalla "Tu cuenta" avisa que falta el proveedor.
+
+1. Crea una cuenta en un proveedor de SMS compatible con Supabase (Twilio, MessageBird, Vonage o Textlocal) y compra o habilita un número que pueda enviar SMS a Colombia.
+2. En Supabase: **Authentication → Sign In / Providers → Phone**, actívalo, elige el proveedor y pega sus credenciales (en Twilio: Account SID, Auth Token y Message Service SID).
+3. Para probar sin pagar mensajes, en esa misma sección agrega **números de prueba** con un código fijo (por ejemplo `573001234567=123456`).
+
+En la app, "Tu cuenta y tu celular" (en Mi actividad y en el panel del candidato) asegura la cuenta del teléfono con el número sin perder nada; "Ya tengo cuenta: entrar con mi celular" (en la bienvenida) entra desde otro teléfono.
 
 Cómo funciona: al abrir, `src/data/remoto.ts` inicia sesión y carga los datos en las listas en memoria que usan las pantallas; cada cambio se aplica en pantalla y se guarda en la base de datos en orden. Si algo no se guarda, aparece un aviso en rojo con el motivo. Los permisos los aplica la base de datos (RLS).
 
@@ -100,7 +110,6 @@ supabase/
 
 ## Siguientes pasos sugeridos
 
-1. Ingreso por celular con código SMS (requiere un proveedor de SMS en Supabase, p. ej. Twilio).
-2. Versión coordinador: aprobaciones de colaboradores, agenda delegada del candidato, tareas por territorio.
-3. Versión líder comunal: tareas, mi gente con fotos, material con calendario, modo sin conexión.
-4. Versión marketing: material de eventos en tiempo real y envío a la red.
+1. Versión coordinador: aprobaciones de colaboradores, agenda delegada del candidato, tareas por territorio.
+2. Versión líder comunal: tareas, mi gente con fotos, material con calendario, modo sin conexión.
+3. Versión marketing: material de eventos en tiempo real y envío a la red.
