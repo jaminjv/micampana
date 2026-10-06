@@ -7,10 +7,10 @@
 import { useSyncExternalStore } from 'react';
 
 import { CARGOS, municipiosDe, nombreDepartamento, nombreMunicipio, nombrePartido, zonasDe } from './catalogos';
-import { APORTES, CANDIDATOS, EVENTOS, PROPUESTAS, PUBLICACIONES } from './mock';
+import { ACTIVIDADES, APORTES, CANDIDATOS, COMPROMISOS, EVENTOS, PROPUESTAS, PUBLICACIONES } from './mock';
 import * as remoto from './remoto';
 import type {
-  Alcance, Aporte, Candidato, Cargo, Etapa, Evento, ModoUso, Propuesta, Publicacion, Tema, TipoAporte, TipoAval,
+  Actividad, Alcance, Aporte, Compromiso, EstadoCompromiso, Candidato, Cargo, Etapa, Evento, ModoUso, Propuesta, Publicacion, Tema, TipoAporte, TipoAval,
   TipoLista, Ubicacion,
 } from './types';
 
@@ -343,7 +343,7 @@ export interface DatosEvento {
 }
 
 /** Crea un evento público y lo publica en el feed para que la gente marque "Asistiré". */
-export function publicarEvento(candidato: string, e: DatosEvento, texto: string) {
+export function publicarEvento(candidato: string, e: DatosEvento, texto: string): string {
   const evento: Evento = { id: nuevoId(), candidato, ...e };
   const pub: Extract<Publicacion, { tipo: 'evento' }> = {
     id: nuevoId(), tipo: 'evento', candidato, evento: evento.id, texto, conPieza: false, fecha: new Date().toISOString(),
@@ -352,6 +352,7 @@ export function publicarEvento(candidato: string, e: DatosEvento, texto: string)
   PUBLICACIONES.push(pub);
   remoto.publicarEvento(evento, pub);
   avisar();
+  return evento.id;
 }
 
 /** Vuelve a anunciar en el feed una propuesta ya publicada. */
@@ -412,4 +413,95 @@ export function seguir(candidato: string, si: boolean) {
 
 export function asistir(evento: string, si: boolean) {
   remoto.asistir(evento, si);
+}
+
+/* ---------- Agenda (interna de la campaña) ---------- */
+
+export const getActividad = (id: string) => ACTIVIDADES.find((a) => a.id === id);
+
+/** Actividades de la campaña en orden cronológico; opcionalmente solo entre dos fechas. */
+export function agendaDe(candidato: string, desde?: Date, hasta?: Date): Actividad[] {
+  return ACTIVIDADES.filter((a) => {
+    if (a.candidato !== candidato) return false;
+    const t = new Date(a.fecha).getTime();
+    return (!desde || t >= desde.getTime()) && (!hasta || t < hasta.getTime());
+  }).sort((a, b) => a.fecha.localeCompare(b.fecha));
+}
+
+/** Actividades de un día (a medianoche) en adelante 24 horas. */
+export function agendaDelDia(candidato: string, dia: Date): Actividad[] {
+  const desde = new Date(dia);
+  desde.setHours(0, 0, 0, 0);
+  return agendaDe(candidato, desde, new Date(desde.getTime() + 86400_000));
+}
+
+/** Otras actividades programadas que empiezan menos de una hora antes o después. */
+export function cruces(candidato: string, fecha: string, salvo?: string): Actividad[] {
+  const t = new Date(fecha).getTime();
+  return ACTIVIDADES.filter(
+    (a) => a.candidato === candidato && a.id !== salvo && a.estado !== 'cancelada' &&
+      Math.abs(new Date(a.fecha).getTime() - t) < 3600_000,
+  );
+}
+
+export type DatosActividad = Omit<Actividad, 'id' | 'candidato' | 'estado' | 'evento'>;
+
+/** Agrega una actividad a la agenda. Si es pública, la anuncia en el feed como evento. */
+export function crearActividad(candidato: string, d: DatosActividad, publicar?: { texto: string }): string {
+  const a: Actividad = { ...d, id: nuevoId(), candidato, estado: 'programada' };
+  ACTIVIDADES.push(a);
+  remoto.guardarActividad(a);
+  if (publicar) {
+    a.evento = publicarEvento(candidato, { titulo: a.titulo, fecha: a.fecha, lugar: a.lugar, alcance: a.comunidad }, publicar.texto);
+    remoto.guardarActividad(a);
+  }
+  avisar();
+  return a.id;
+}
+
+export function actualizarActividad(id: string, cambios: Partial<Omit<Actividad, 'id' | 'candidato'>>) {
+  const a = getActividad(id);
+  if (!a) return;
+  Object.assign(a, cambios);
+  remoto.guardarActividad(a);
+  avisar();
+}
+
+/* ---------- Compromisos con comunidades ---------- */
+
+export const getCompromiso = (id: string) => COMPROMISOS.find((c) => c.id === id);
+
+/** Compromisos de la campaña, los más recientes primero; opcionalmente de un estado o de una actividad. */
+export function compromisosDe(candidato: string, f: { estado?: EstadoCompromiso; actividad?: string } = {}): Compromiso[] {
+  return COMPROMISOS.filter(
+    (c) => c.candidato === candidato && (!f.estado || c.estado === f.estado) && (!f.actividad || c.actividad === f.actividad),
+  ).sort((a, b) => b.fecha.localeCompare(a.fecha));
+}
+
+export type DatosCompromiso = Pick<Compromiso, 'que' | 'conQuien' | 'comunidad' | 'actividad' | 'aporte'>;
+
+export function registrarCompromiso(candidato: string, d: DatosCompromiso): string {
+  const c: Compromiso = { ...d, id: nuevoId(), candidato, estado: 'registrado', fecha: new Date().toISOString() };
+  COMPROMISOS.push(c);
+  remoto.guardarCompromiso(c);
+  avisar();
+  return c.id;
+}
+
+export function cambiarEstadoCompromiso(id: string, estado: EstadoCompromiso) {
+  const c = getCompromiso(id);
+  if (!c) return;
+  c.estado = estado;
+  remoto.guardarCompromiso(c);
+  avisar();
+}
+
+/** El compromiso quedó incluido en una propuesta del programa. */
+export function incluirEnPropuesta(id: string, propuesta: string) {
+  const c = getCompromiso(id);
+  if (!c) return;
+  c.propuesta = propuesta;
+  c.estado = 'incluido';
+  remoto.guardarCompromiso(c);
+  avisar();
 }

@@ -8,7 +8,8 @@ import { PropuestaCard } from '@/components/cards';
 import { Badge, Button, Card, Chip, ChipRow, Field, Ionicons, Notice, Row, Screen, Small, TopBar } from '@/components/ui';
 import { TEMAS } from '@/data/catalogos';
 import {
-  borrarBorrador, corregirPropuesta, crearBorrador, editarBorrador, getPropuesta, publicarPropuesta, retirarPropuesta,
+  borrarBorrador, corregirPropuesta, crearBorrador, editarBorrador, getCompromiso, getPropuesta, incluirEnPropuesta,
+  publicarPropuesta, retirarPropuesta,
   type DatosPropuesta,
 } from '@/data/repo';
 import type { Alcance, Tema } from '@/data/types';
@@ -21,14 +22,16 @@ import { Text } from '@/components/Texto';
  * Publicar y corregir siempre pasan por la advertencia de permanencia.
  */
 export default function EditorPropuesta() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, compromiso: compromisoId } = useLocalSearchParams<{ id?: string; compromiso?: string }>();
   const c = useMiCampana();
   const original = id ? getPropuesta(id) : undefined;
+  // Una propuesta nueva puede nacer de un compromiso registrado en una visita.
+  const compromiso = !id && compromisoId ? getCompromiso(compromisoId) : undefined;
 
-  const [titulo, setTitulo] = useState(original?.titulo ?? '');
+  const [titulo, setTitulo] = useState(original?.titulo ?? compromiso?.que.slice(0, 90) ?? '');
   const [resumen, setResumen] = useState(original?.resumen ?? '');
   const [tema, setTema] = useState<Tema | undefined>(original?.tema);
-  const [alcance, setAlcance] = useState<Alcance | undefined>(original?.alcance);
+  const [alcance, setAlcance] = useState<Alcance | undefined>(original?.alcance ?? compromiso?.comunidad);
   const [aviso, setAviso] = useState(false);
   const [retirando, setRetirando] = useState(false);
   const [motivo, setMotivo] = useState('');
@@ -63,7 +66,10 @@ export default function EditorPropuesta() {
     const d = datos();
     if (!d) return;
     if (original) editarBorrador(original.id, d);
-    else crearBorrador(c.id, d);
+    else {
+      const pid = crearBorrador(c.id, d);
+      if (compromiso) incluirEnPropuesta(compromiso.id, pid);
+    }
     router.back();
   };
 
@@ -77,6 +83,7 @@ export default function EditorPropuesta() {
       if (pid) editarBorrador(pid, d);
       else pid = crearBorrador(c.id, d);
       publicarPropuesta(pid, true);
+      if (compromiso) incluirEnPropuesta(compromiso.id, pid);
     }
     setAviso(false);
     router.back();
@@ -104,6 +111,9 @@ export default function EditorPropuesta() {
       background={colors.surface}
       header={<TopBar oscura title={publicada ? 'Corregir propuesta' : original ? 'Revisar borrador' : 'Nueva propuesta'} />}
       footer={retirando ? undefined : footer}>
+      {compromiso ? (
+        <Notice icon="git-branch" tone="ok">{`Viene del compromiso con ${compromiso.conQuien}. Al guardarla, el compromiso queda en el programa.`}</Notice>
+      ) : null}
       {publicada ? (
         <Notice icon="information-circle" tone="primary">
           Está publicada. Puedes corregir el título y la explicación; la versión anterior quedará visible.
@@ -154,7 +164,7 @@ export default function EditorPropuesta() {
       />
 
       {!publicada ? (
-        <Small>Fotos, videos y crear propuestas desde un compromiso de visita llegan en la siguiente fase.</Small>
+        <Small>Fotos y videos llegan en la siguiente fase.</Small>
       ) : null}
 
       {original && estado === 'borrador' ? (

@@ -63,14 +63,15 @@ export default function Voces() {
         </Card>
       ) : null}
 
-      {aportes.map((a) => <AporteCard key={a.id} a={a} />)}
+      {aportes.map((a) => <AporteCard key={a.id} a={a} candidato={c.etapa === 'candidato'} />)}
 
       <Small>Solo tú y tu equipo ven los datos de quien escribe. El ciudadano ve el estado de su aporte y tu respuesta.</Small>
     </Screen>
   );
 }
 
-function AporteCard({ a }: { a: Aporte }) {
+/** "candidato": puede llevar ideas y solicitudes a un compromiso (los aspirantes no). */
+function AporteCard({ a, candidato }: { a: Aporte; candidato: boolean }) {
   const [respondiendo, setRespondiendo] = useState(false);
   const [texto, setTexto] = useState('');
   const t = TIPO[a.tipo];
@@ -115,17 +116,30 @@ function AporteCard({ a }: { a: Aporte }) {
             />
           </Row>
         </>
-      ) : !a.respuesta ? (
-        <Button
-          label="Responder"
-          variant="secondary"
-          size="md"
-          onPress={() => {
-            marcarEnRevision(a.id);
-            setRespondiendo(true);
-          }}
-        />
-      ) : null}
+      ) : (
+        <Row gap={8}>
+          {!a.respuesta ? (
+            <Button
+              label="Responder"
+              variant="secondary"
+              size="md"
+              style={{ flex: 1 }}
+              onPress={() => {
+                marcarEnRevision(a.id);
+                setRespondiendo(true);
+              }}
+            />
+          ) : null}
+          {candidato && (a.tipo === 'idea' || a.tipo === 'solicitud') ? (
+            <Button
+              label="A compromiso"
+              size="md"
+              style={{ flex: 1 }}
+              onPress={() => router.push({ pathname: '/campana/compromiso', params: { aporte: a.id } })}
+            />
+          ) : null}
+        </Row>
+      )}
     </Card>
   );
 }

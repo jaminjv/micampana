@@ -10,7 +10,7 @@
  * - Comunas, corregimientos, barrios y veredas varían por municipio; el candidato
  *   puede completarlos o ajustarlos (tabla `zonas`).
  */
-import type { Departamento, Municipio, Partido, Tema, Zona } from './types';
+import type { Departamento, EstadoCompromiso, Municipio, Partido, Tema, TipoActividad, Zona } from './types';
 
 export const PARTIDOS: Partido[] = [
   { id: 'liberal', nombre: 'Partido Liberal Colombiano' },
@@ -104,3 +104,20 @@ export const municipiosDe = (dep: string) => MUNICIPIOS.filter((m) => m.departam
 export const zonasDe = (mun: string, tipo: Zona['tipo'], padre?: string) =>
   ZONAS.filter((z) => z.municipio === mun && z.tipo === tipo && (padre ? z.padre === padre : true));
 export const nombreZona = (id?: string) => ZONAS.find((z) => z.id === id)?.nombre ?? '';
+
+export const TIPOS_ACTIVIDAD: Record<TipoActividad, string> = {
+  visita: 'Visita',
+  evento: 'Evento',
+  reunion: 'Reunión',
+  debate: 'Debate',
+  caravana: 'Caravana',
+  medios: 'Medios',
+  otro: 'Otro',
+};
+
+export const ESTADOS_COMPROMISO: Record<EstadoCompromiso, { label: string; tone: 'neutral' | 'primary' | 'ok' | 'warn' }> = {
+  registrado: { label: 'Registrado', tone: 'neutral' },
+  en_estudio: { label: 'En estudio', tone: 'primary' },
+  incluido: { label: 'En el programa', tone: 'ok' },
+  descartado: { label: 'Descartado', tone: 'warn' },
+};

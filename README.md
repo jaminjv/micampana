@@ -20,7 +20,8 @@ El nombre se cambia en `src/config.ts` y `app.json`. La identidad visual (colore
 | Ingreso por celular con código SMS (hoy cada teléfono entra con una cuenta anónima) | Pendiente |
 | Subir el aval al pasar de aspirante a candidato (con Supabase, la base de datos lo exige) | Pendiente |
 | Versiones de coordinador, líder comunal y marketing | Pendiente |
-| Agenda, compromisos, sondeos, equipo y marketing (lado candidato) | Pendiente |
+| Agenda del candidato (hoy, próximas y pasadas; visitas con asistencia y notas; aviso de cruces; publicar como evento) y compromisos con comunidades (desde visitas o aportes, estados, convertir en propuesta) | Hecho |
+| Sondeos, equipo y marketing (lado candidato) | Pendiente |
 | Fotos y video en propuestas y piezas gráficas en eventos | Pendiente |
 
 ## Cómo correrla en tu celular
@@ -53,7 +54,7 @@ El React Compiler está apagado en `app.json` (`experiments.reactCompiler`) porq
 Sin las variables de `.env`, la app usa los datos de prueba. Con ellas, carga y guarda todo en tu proyecto de Supabase.
 
 1. Crea un proyecto en [supabase.com](https://supabase.com).
-2. En **SQL Editor**, ejecuta en este orden, cada archivo completo: `supabase/migrations/0001_esquema_inicial.sql`, `supabase/migrations/0002_conexion_app.sql` y `supabase/seed.sql`.
+2. En **SQL Editor**, ejecuta en este orden, cada archivo completo: `supabase/migrations/0001_esquema_inicial.sql`, `supabase/migrations/0002_conexion_app.sql`, `supabase/migrations/0003_agenda_compromisos.sql` y `supabase/seed.sql`. Si ya tenías la base de datos, ejecuta solo las migraciones nuevas (cada una dice en su encabezado después de cuál va).
 3. En **Authentication → Sign In / Providers**, activa **Allow anonymous sign-ins**. Mientras no esté el ingreso por SMS, cada teléfono entra con una cuenta anónima que se conserva en el aparato (si se borran los datos de la app, se pierde).
 4. En **Project Settings → API**, copia la **Project URL** y la clave pública (**anon** / **publishable**). Copia `.env.example` como `.env` y pon ahí esos dos valores. Nunca pongas la clave `service_role`: esa da acceso total y no debe ir en la app.
 5. Detén la app (`Ctrl + C`) y vuelve a abrirla con `npx expo start`.
@@ -100,7 +101,6 @@ supabase/
 ## Siguientes pasos sugeridos
 
 1. Ingreso por celular con código SMS (requiere un proveedor de SMS en Supabase, p. ej. Twilio) y subir el aval al actualizar a candidato.
-2. Lado candidato: agenda del día (pestaña Hoy), compromisos de visitas y "A compromiso" desde un aporte.
 3. Versión coordinador: aprobaciones de colaboradores, agenda delegada del candidato, tareas por territorio.
 4. Versión líder comunal: tareas, mi gente con fotos, material con calendario, modo sin conexión.
 5. Versión marketing: material de eventos en tiempo real y envío a la red.

@@ -41,13 +41,14 @@ interface Props {
   onChange: (a: Alcance) => void;
   /** Texto bajo el selector; recibe la etiqueta del territorio elegido. */
   ayuda?: (etiqueta: string) => string;
+  titulo?: string;
 }
 
 /**
  * "¿Para dónde es?": todo el territorio de la campaña o zonas específicas
  * (comunas y barrios en Alcaldía y Concejo; municipios en Gobernación y Asamblea).
  */
-export function AlcancePicker({ campana, value, onChange, ayuda }: Props) {
+export function AlcancePicker({ campana, value, onChange, ayuda, titulo = '¿Para dónde es?' }: Props) {
   const niveles = nivelesDeCampana(campana);
   const departamental = CARGOS[campana.cargo].ambito === 'departamento';
   const mun = campana.municipio ?? '';
@@ -79,7 +80,7 @@ export function AlcancePicker({ campana, value, onChange, ayuda }: Props) {
 
   return (
     <View style={{ gap: 8 }}>
-      <Text style={type.label}>¿Para dónde es?</Text>
+      <Text style={type.label}>{titulo}</Text>
       <Segmented<Nivel> value={value.nivel} onChange={cambiarNivel} options={niveles.map((n) => ({ value: n, label: etiquetaNivel(n) }))} />
       {eligeZonas && lista.length === 0 ? (
         <Small>Tu municipio aún no tiene comunas ni barrios cargados. Por ahora elige toda la ciudad.</Small>

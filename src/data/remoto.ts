@@ -9,9 +9,9 @@
  */
 import { supabase } from '@/lib/supabase';
 import { DEPARTAMENTOS, MUNICIPIOS, PARTIDOS, ZONAS } from './catalogos';
-import { APORTES, CANDIDATOS, EVENTOS, PROPUESTAS, PUBLICACIONES } from './mock';
+import { ACTIVIDADES, APORTES, CANDIDATOS, COMPROMISOS, EVENTOS, PROPUESTAS, PUBLICACIONES } from './mock';
 import type {
-  Alcance, Aporte, Candidato, Ciudadano, Evento, Propuesta, Publicacion, Zona,
+  Actividad, Alcance, Aporte, Compromiso, Candidato, Ciudadano, Evento, Propuesta, Publicacion, Zona,
 } from './types';
 
 export const conectado = !!supabase;
@@ -42,6 +42,17 @@ export function alFallar(f: (mensaje: string) => void) {
 const fallo = (m: string) => oyentesError.forEach((f) => f(m));
 
 let cola: Promise<void> = Promise.resolve();
+
+/**
+ * Copia de los datos en el momento de pedir la escritura. Las escrituras esperan
+ * su turno en la cola y los objetos de la app pueden cambiar mientras tanto
+ * (p. ej. una actividad a la que luego se le asigna su evento público).
+ */
+const foto = <T extends object>(o: T): T => {
+  const copia = { ...o } as Record<string, unknown>;
+  for (const k of Object.keys(copia)) if (Array.isArray(copia[k])) copia[k] = [...(copia[k] as unknown[])];
+  return copia as T;
+};
 
 /**
  * Guarda un cambio en la base de datos. Las escrituras van una detrás de otra,
@@ -119,6 +130,18 @@ const aporteDe = (r: any): Aporte => ({
   estado: r.estado, fecha: r.creado, respuesta: r.respuesta ?? undefined,
 });
 
+const actividadDe = (r: any): Actividad => ({
+  id: r.id, candidato: r.campana_id, tipo: r.tipo, titulo: r.titulo, fecha: r.fecha, lugar: r.lugar,
+  comunidad: alcanceDe(r), responsable: r.responsable ?? undefined, estado: r.estado,
+  asistentesEsperados: r.asistentes_esperados ?? undefined, asistentesReales: r.asistentes_reales ?? undefined,
+  notas: r.notas ?? undefined, evento: r.evento_id ?? undefined,
+});
+
+const compromisoDe = (r: any): Compromiso => ({
+  id: r.id, candidato: r.campana_id, que: r.que, conQuien: r.con_quien, comunidad: alcanceDe(r), estado: r.estado,
+  fecha: r.creado, actividad: r.actividad_id ?? undefined, aporte: r.aporte_id ?? undefined, propuesta: r.propuesta_id ?? undefined,
+});
+
 const TIPOS_ZONA: Zona['tipo'][] = ['comuna', 'corregimiento', 'barrio', 'vereda'];
 
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -158,7 +181,7 @@ export async function cargarTodo(): Promise<SesionRemota> {
   uid = session?.user.id ?? null;
   if (!uid) throw new Error('No se pudo iniciar sesión.');
 
-  const [partidos, deps, muns, zonas, campanas, propuestas, eventos, pubs, aportes, perfiles, sigo, voy] =
+  const [partidos, deps, muns, zonas, campanas, propuestas, eventos, pubs, aportes, perfiles, sigo, voy, agenda, compromisos] =
     await Promise.all([
       leer(sb.from('partidos').select('id, nombre, sigla').eq('vigente', true).order('nombre'), 'los partidos'),
       leer(sb.from('departamentos').select('codigo, nombre').order('nombre'), 'los departamentos'),
@@ -176,6 +199,9 @@ export async function cargarTodo(): Promise<SesionRemota> {
       leer(sb.from('perfiles').select('*').eq('id', uid), 'tu perfil'),
       leer(sb.from('seguidores').select('campana_id').eq('perfil_id', uid), 'a quién sigues'),
       leer(sb.from('asistencias').select('evento_id').eq('perfil_id', uid), 'tus eventos'),
+      // RLS: solo llegan la agenda y los compromisos de la campaña de la que haces parte.
+      leer(sb.from('actividades').select('*').order('fecha'), 'la agenda'),
+      leer(sb.from('compromisos').select('*').order('creado', { ascending: false }), 'los compromisos'),
     ]);
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -193,6 +219,8 @@ export async function cargarTodo(): Promise<SesionRemota> {
   reemplazar(EVENTOS, eventos.map(eventoDe));
   reemplazar(PUBLICACIONES, pubs.map(publicacionDe).filter((p): p is Publicacion => !!p));
   reemplazar(APORTES, aportes.map(aporteDe));
+  reemplazar(ACTIVIDADES, agenda.map(actividadDe));
+  reemplazar(COMPROMISOS, compromisos.map(compromisoDe));
 
   const perfil: any = perfiles[0];
   const campana = campanas.find((c: any) => c.titular === uid);
@@ -224,7 +252,8 @@ export async function cargarTodo(): Promise<SesionRemota> {
 
 /* ---------- Escrituras ---------- */
 
-export function guardarPerfilCiudadano(c: Omit<Ciudadano, 'siguiendo' | 'asistire'>) {
+export function guardarPerfilCiudadano(c0: Omit<Ciudadano, 'siguiendo' | 'asistire'>) {
+  const c = foto(c0);
   escribir('guardar tu registro', () =>
     db().from('perfiles').upsert({
       id: uid,
@@ -239,7 +268,8 @@ export function guardarPerfilCiudadano(c: Omit<Ciudadano, 'siguiendo' | 'asistir
   );
 }
 
-export function guardarCampana(c: Candidato) {
+export function guardarCampana(c0: Candidato) {
+  const c = foto(c0);
   // La campaña cuelga de un perfil: se crea si aún no existe (sin tocar uno existente).
   escribir('crear tu perfil', () =>
     db().from('perfiles').upsert({ id: uid, nombre: c.nombre }, { onConflict: 'id', ignoreDuplicates: true }),
@@ -271,7 +301,8 @@ export function guardarCampana(c: Candidato) {
 
 const filaAlcance = (a: Alcance) => ({ nivel: a.nivel, alcance_ids: a.ids, alcance_texto: a.etiqueta });
 
-export function crearBorrador(p: Propuesta) {
+export function crearBorrador(p0: Propuesta) {
+  const p = foto(p0);
   escribir('guardar la propuesta', () =>
     db().from('propuestas').insert({
       id: p.id, campana_id: p.candidato, titulo: p.titulo, resumen: p.resumen, tema: p.tema,
@@ -280,7 +311,8 @@ export function crearBorrador(p: Propuesta) {
   );
 }
 
-export function editarBorrador(p: Propuesta) {
+export function editarBorrador(p0: Propuesta) {
+  const p = foto(p0);
   escribir('guardar la propuesta', () =>
     db().from('propuestas')
       .update({ titulo: p.titulo, resumen: p.resumen, tema: p.tema, ...filaAlcance(p.alcance) })
@@ -288,7 +320,8 @@ export function editarBorrador(p: Propuesta) {
   );
 }
 
-export function publicarPropuesta(p: Propuesta, publicacionId: string) {
+export function publicarPropuesta(p0: Propuesta, publicacionId: string) {
+  const p = foto(p0);
   escribir('publicar la propuesta', () =>
     db().from('propuestas')
       .update({ estado: 'publicada', publicada_el: p.publicadaEl, acepto_permanencia: new Date().toISOString() })
@@ -297,7 +330,8 @@ export function publicarPropuesta(p: Propuesta, publicacionId: string) {
   anunciarPropuesta(p, publicacionId, p.publicadaEl);
 }
 
-export function anunciarPropuesta(p: Propuesta, publicacionId: string, fecha: string) {
+export function anunciarPropuesta(p0: Propuesta, publicacionId: string, fecha: string) {
+  const p = foto(p0);
   escribir('anunciar la propuesta en el feed', () =>
     db().from('publicaciones').insert({
       id: publicacionId, campana_id: p.candidato, tipo: 'propuesta', propuesta_id: p.id,
@@ -306,13 +340,15 @@ export function anunciarPropuesta(p: Propuesta, publicacionId: string, fecha: st
   );
 }
 
-export function corregirPropuesta(p: Propuesta) {
+export function corregirPropuesta(p0: Propuesta) {
+  const p = foto(p0);
   escribir('guardar la corrección', () =>
     db().from('propuestas').update({ titulo: p.titulo, resumen: p.resumen }).eq('id', p.id),
   );
 }
 
-export function retirarPropuesta(p: Propuesta) {
+export function retirarPropuesta(p0: Propuesta) {
+  const p = foto(p0);
   escribir('retirar la propuesta', () =>
     db().from('propuestas')
       .update({ estado: 'retirada', retirada_motivo: p.retirada?.motivo, retirada_el: p.retirada?.fecha })
@@ -328,7 +364,8 @@ export function contarLecturas(ids: string[]) {
   escribir('contar las lecturas', () => db().rpc('contar_lecturas', { ids }));
 }
 
-export function publicarMensaje(pub: Extract<Publicacion, { tipo: 'mensaje' }>) {
+export function publicarMensaje(pub0: Extract<Publicacion, { tipo: 'mensaje' }>) {
+  const pub = foto(pub0);
   escribir('publicar el mensaje', () =>
     db().from('publicaciones').insert({
       id: pub.id, campana_id: pub.candidato, tipo: 'mensaje', texto: pub.texto,
@@ -337,7 +374,9 @@ export function publicarMensaje(pub: Extract<Publicacion, { tipo: 'mensaje' }>) 
   );
 }
 
-export function publicarEvento(e: Evento, pub: Extract<Publicacion, { tipo: 'evento' }>) {
+export function publicarEvento(e0: Evento, pub0: Extract<Publicacion, { tipo: 'evento' }>) {
+  const e = foto(e0);
+  const pub = foto(pub0);
   escribir('crear el evento', () =>
     db().from('eventos').insert({
       id: e.id, campana_id: e.candidato, titulo: e.titulo, fecha: e.fecha, lugar: e.lugar, ...filaAlcance(e.alcance),
@@ -351,7 +390,8 @@ export function publicarEvento(e: Evento, pub: Extract<Publicacion, { tipo: 'eve
   );
 }
 
-export function enviarAporte(a: Aporte) {
+export function enviarAporte(a0: Aporte) {
+  const a = foto(a0);
   escribir('enviar tu aporte', () =>
     db().from('aportes').insert({
       id: a.id, campana_id: a.candidato, autor: uid, tipo: a.tipo, tema: a.tema, texto: a.texto, lugar: a.lugar,
@@ -359,7 +399,8 @@ export function enviarAporte(a: Aporte) {
   );
 }
 
-export function actualizarAporte(a: Aporte) {
+export function actualizarAporte(a0: Aporte) {
+  const a = foto(a0);
   escribir('guardar la respuesta', () =>
     db().from('aportes')
       .update({ estado: a.estado, respuesta: a.respuesta ?? null, respondido_por: a.respuesta ? uid : null })
@@ -380,5 +421,28 @@ export function asistir(evento: string, si: boolean) {
     si
       ? db().from('asistencias').insert({ evento_id: evento, perfil_id: uid })
       : db().from('asistencias').delete().eq('evento_id', evento).eq('perfil_id', uid),
+  );
+}
+
+export function guardarActividad(a0: Actividad) {
+  const a = foto(a0);
+  escribir('guardar la actividad', () =>
+    db().from('actividades').upsert({
+      id: a.id, campana_id: a.candidato, tipo: a.tipo, titulo: a.titulo, fecha: a.fecha, lugar: a.lugar,
+      ...filaAlcance(a.comunidad), responsable: a.responsable ?? null, estado: a.estado,
+      asistentes_esperados: a.asistentesEsperados ?? null, asistentes_reales: a.asistentesReales ?? null,
+      notas: a.notas ?? null, evento_id: a.evento ?? null, creado_por: uid,
+    }),
+  );
+}
+
+export function guardarCompromiso(c0: Compromiso) {
+  const c = foto(c0);
+  escribir('guardar el compromiso', () =>
+    db().from('compromisos').upsert({
+      id: c.id, campana_id: c.candidato, que: c.que, con_quien: c.conQuien, ...filaAlcance(c.comunidad),
+      estado: c.estado, actividad_id: c.actividad ?? null, aporte_id: c.aporte ?? null,
+      propuesta_id: c.propuesta ?? null, registrado_por: uid,
+    }),
   );
 }

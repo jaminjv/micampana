@@ -11,13 +11,16 @@ import { colors, radius } from '@/theme';
 /** Desde este ancho (computador o tableta horizontal) se muestra la barra lateral. */
 const ANCHO_SIDEBAR = 900;
 
-interface Item { titulo: string; icon: IconName; destino: Href; ruta: string; soloCandidato?: boolean }
+/** rutas: pantallas en las que este elemento del menú se ve activo. */
+interface Item { titulo: string; icon: IconName; destino: Href; rutas: string[]; soloCandidato?: boolean }
 
 const ITEMS: Item[] = [
-  { titulo: 'Panel', icon: 'grid', destino: '/campana', ruta: '/campana' },
-  { titulo: 'Voces ciudadanas', icon: 'chatbubbles', destino: '/campana/voces', ruta: '/campana/voces' },
-  { titulo: 'Propuestas', icon: 'document-text', destino: '/campana/propuestas', ruta: '/campana/propuesta', soloCandidato: true },
-  { titulo: 'Publicar en el feed', icon: 'newspaper', destino: '/campana/publicar', ruta: '/campana/publicar', soloCandidato: true },
+  { titulo: 'Panel', icon: 'grid', destino: '/campana', rutas: ['/campana'] },
+  { titulo: 'Agenda', icon: 'calendar', destino: '/campana/agenda', rutas: ['/campana/agenda', '/campana/actividad'], soloCandidato: true },
+  { titulo: 'Compromisos', icon: 'checkmark-done', destino: '/campana/compromisos', rutas: ['/campana/compromisos', '/campana/compromiso'], soloCandidato: true },
+  { titulo: 'Voces ciudadanas', icon: 'chatbubbles', destino: '/campana/voces', rutas: ['/campana/voces'] },
+  { titulo: 'Propuestas', icon: 'document-text', destino: '/campana/propuestas', rutas: ['/campana/propuestas', '/campana/propuesta'], soloCandidato: true },
+  { titulo: 'Publicar en el feed', icon: 'newspaper', destino: '/campana/publicar', rutas: ['/campana/publicar'], soloCandidato: true },
 ];
 
 /**
@@ -53,7 +56,7 @@ function Sidebar() {
         ) : null}
         <View style={{ gap: 4 }} accessibilityRole="menu">
           {ITEMS.map((it) => {
-            const activo = it.ruta === '/campana' ? ruta === '/campana' : ruta.startsWith(it.ruta);
+            const activo = it.rutas.includes(ruta);
             const bloqueado = !!it.soloCandidato && aspirante;
             return (
               <Pressable

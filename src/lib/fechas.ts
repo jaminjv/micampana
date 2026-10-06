@@ -31,3 +31,26 @@ export function fechaCorta(iso: string): string {
   const f = new Date(iso);
   return `${f.getDate()} ${MESES[f.getMonth()]}`;
 }
+
+const DIAS_LARGOS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES_LARGOS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+/** "Jueves 2 de octubre". */
+export function fechaLarga(iso: string): string {
+  const f = new Date(iso);
+  const d = DIAS_LARGOS[f.getDay()];
+  return `${d.charAt(0).toUpperCase()}${d.slice(1)} ${f.getDate()} de ${MESES_LARGOS[f.getMonth()]}`;
+}
+
+/** "Hoy", "Mañana", "Ayer" o la fecha larga. */
+export function diaRelativo(iso: string): string {
+  const f = new Date(iso);
+  f.setHours(0, 0, 0, 0);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const dif = Math.round((f.getTime() - hoy.getTime()) / 86400_000);
+  if (dif === 0) return 'Hoy';
+  if (dif === 1) return 'Mañana';
+  if (dif === -1) return 'Ayer';
+  return fechaLarga(iso);
+}

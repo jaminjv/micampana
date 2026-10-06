@@ -2,9 +2,11 @@ import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { Button, Card, Ionicons, Notice, Screen, Small, Title, type IconName } from '@/components/ui';
+import { Button, Card, Ionicons, Notice, Row, Screen, Small, Title, type IconName } from '@/components/ui';
 import { CARGOS, nombreDepartamento, nombreMunicipio, nombrePartido } from '@/data/catalogos';
-import { aportesDeCampana, propuestasDeCampana } from '@/data/repo';
+import { ListaActividades } from '@/components/agenda';
+import { agendaDe, agendaDelDia, aportesDeCampana, compromisosDe, propuestasDeCampana } from '@/data/repo';
+import { diaRelativo, fechaLarga, horaTexto } from '@/lib/fechas';
 import { useApp, useMiCampana } from '@/state/app';
 import { colors, radius, shadow } from '@/theme';
 import { Text } from '@/components/Texto';
@@ -25,7 +27,8 @@ const HERRAMIENTAS: Herramienta[] = [
   { icon: 'people', titulo: 'Equipo', texto: 'Coordinadores y líderes', aspirante: true },
   { icon: 'document-text', titulo: 'Propuestas', texto: 'Públicas y permanentes', aspirante: false, destino: '/campana/propuestas' },
   { icon: 'newspaper', titulo: 'Publicar en el feed', texto: 'Eventos y mensajes', aspirante: false, destino: '/campana/publicar' },
-  { icon: 'calendar', titulo: 'Agenda y visitas', texto: 'Delegable a un coordinador', aspirante: false },
+  { icon: 'calendar', titulo: 'Agenda y visitas', texto: 'Actividades y visitas', aspirante: false, destino: '/campana/agenda' },
+  { icon: 'checkmark-done', titulo: 'Compromisos', texto: 'Lo que acordaste en territorio', aspirante: false, destino: '/campana/compromisos' },
   { icon: 'images', titulo: 'Marketing', texto: 'Material por evento', aspirante: false },
 ];
 
@@ -64,6 +67,16 @@ export default function Panel() {
     .slice(0, 3)
     .map(([t]) => t.toLowerCase());
 
+  // Agenda de hoy y próxima visita (solo candidatos en campaña completa).
+  const conAgenda = !aspirante && !soloMensajes;
+  const ahora = new Date();
+  const hoy = conAgenda ? agendaDelDia(campana.id, ahora) : [];
+  // La próxima visita después de hoy (las de hoy ya están en la agenda de arriba).
+  const manana = new Date(ahora);
+  manana.setHours(24, 0, 0, 0);
+  const proxima = conAgenda ? agendaDe(campana.id, manana).find((a) => a.tipo === 'visita' && a.estado === 'programada') : undefined;
+  const abiertos = conAgenda ? compromisosDe(campana.id).filter((m) => m.estado === 'registrado' || m.estado === 'en_estudio').length : 0;
+
   const destinoDe = (h: Herramienta): Href | undefined =>
     h.titulo === 'Mi perfil' ? { pathname: '/candidato/[usuario]', params: { usuario: campana.usuario } } : h.destino;
   const detalle = (h: Herramienta) => {
@@ -96,6 +109,7 @@ export default function Panel() {
               {`${aspirante ? 'Aspirante' : 'Candidato'} · ${cargo.nombre} · ${lugar}`}
             </Text>
           </View>
+          <Text style={s.fecha}>{fechaLarga(new Date().toISOString())}</Text>
           <Text style={s.hola} accessibilityRole="header">{`Hola, ${campana.nombre.split(' ')[0]}`}</Text>
           {aval ? <Text style={s.aval}>{`${aval}${candidatura.numero ? ` · N.º ${candidatura.numero}` : ''}`}</Text> : null}
           <View style={s.stats}>
@@ -110,6 +124,38 @@ export default function Panel() {
       <View style={[s.cuerpo, s.ancho]}>
       {!aspirante && !campana.verificado ? (
         <Notice icon="time" tone="warn">Verificando tu aval. Mientras tanto puedes preparar tu perfil.</Notice>
+      ) : null}
+
+      {conAgenda ? (
+        <>
+          <Row style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <Text style={s.h2}>Agenda de hoy</Text>
+            <Pressable accessibilityRole="link" onPress={() => router.push('/campana/agenda')} hitSlop={10}>
+              <Text style={s.enlace}>Ver agenda</Text>
+            </Pressable>
+          </Row>
+          {hoy.length ? (
+            <ListaActividades items={hoy} />
+          ) : (
+            <Card>
+              <Small>Nada en la agenda de hoy.</Small>
+              <Button label="Agregar actividad" variant="secondary" size="md" onPress={() => router.push('/campana/actividad')} />
+            </Card>
+          )}
+          {proxima ? (
+            <>
+              <Text style={s.h2}>Próxima visita</Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push({ pathname: '/campana/actividad', params: { id: proxima.id } })}
+                style={({ pressed }) => [s.tool, { width: '100%', minHeight: 0 }, pressed && { opacity: 0.9 }]}>
+                <Text style={s.toolTitle}>{`${proxima.comunidad.etiqueta} · ${diaRelativo(proxima.fecha)}, ${horaTexto(proxima.fecha)}`}</Text>
+                <Text style={s.toolText}>{[proxima.lugar, proxima.responsable ? `Recibe: ${proxima.responsable}` : ''].filter(Boolean).join(' · ')}</Text>
+                {abiertos ? <Text style={s.toolText}>{abiertos === 1 ? '1 compromiso por resolver en tu campaña' : `${abiertos} compromisos por resolver en tu campaña`}</Text> : null}
+              </Pressable>
+            </>
+          ) : null}
+        </>
       ) : null}
 
       <Text style={s.h2}>Tus herramientas</Text>
@@ -174,6 +220,8 @@ const s = StyleSheet.create({
   logo: { width: 80, height: 20, marginBottom: 6 },
   etiqueta: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: colors.nightSoft },
   etiquetaTexto: { fontSize: 12, fontWeight: '600', color: colors.onNight },
+  fecha: { fontSize: 14, color: colors.onNightMuted },
+  enlace: { fontSize: 14, fontWeight: '600', color: colors.primary },
   hola: { fontSize: 28, fontWeight: '700', color: colors.onNight, letterSpacing: -0.3 },
   aval: { fontSize: 14, color: colors.onNightMuted },
   stats: { flexDirection: 'row', gap: 8, marginTop: 6 },

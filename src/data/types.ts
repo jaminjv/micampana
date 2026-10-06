@@ -140,3 +140,45 @@ export interface Ciudadano {
   siguiendo: string[]; // ids de candidato
   asistire: string[]; // ids de evento
 }
+
+/* ---------- Agenda y compromisos (lado candidato) ---------- */
+
+export type TipoActividad = 'visita' | 'evento' | 'reunion' | 'debate' | 'caravana' | 'medios' | 'otro';
+
+export type EstadoActividad = 'programada' | 'realizada' | 'cancelada';
+
+/** Actividad de la agenda interna de la campaña. Una visita puede originar compromisos. */
+export interface Actividad {
+  id: string;
+  candidato: string;
+  tipo: TipoActividad;
+  titulo: string;
+  fecha: string; // ISO con hora
+  lugar: string;
+  comunidad: Alcance; // barrio, comuna o territorio donde ocurre
+  responsable?: string;
+  estado: EstadoActividad;
+  asistentesEsperados?: number;
+  asistentesReales?: number;
+  notas?: string;
+  evento?: string; // id del evento público, si se anunció en el feed
+}
+
+export type EstadoCompromiso = 'registrado' | 'en_estudio' | 'incluido' | 'descartado';
+
+/**
+ * Compromiso programático con una comunidad: qué se impulsará, con quién y dónde.
+ * Nunca un beneficio individual a cambio de votos.
+ */
+export interface Compromiso {
+  id: string;
+  candidato: string;
+  que: string;
+  conQuien: string;
+  comunidad: Alcance;
+  estado: EstadoCompromiso;
+  fecha: string; // ISO
+  actividad?: string; // visita o actividad donde surgió
+  aporte?: string; // aporte ciudadano del que viene
+  propuesta?: string; // propuesta del programa en la que quedó incluido
+}

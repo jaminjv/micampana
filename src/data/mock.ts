@@ -3,7 +3,7 @@
  * Las listas son mutables: repo.ts les agrega lo que se crea en la app mientras
  * no esté conectado Supabase (al recargar se reinicia).
  */
-import type { Aporte, Candidato, Evento, Propuesta, Publicacion } from './types';
+import type { Actividad, Aporte, Candidato, Compromiso, Evento, Propuesta, Publicacion } from './types';
 
 export const CANDIDATOS: Candidato[] = [
   {
@@ -114,4 +114,33 @@ export const APORTES: Aporte[] = [
     texto: 'La calle 12 se inunda cada vez que llueve; necesitamos alcantarillado pluvial.' },
   { id: 'a6', candidato: 'k1', lugar: 'Barrio El Prado', tipo: 'consejo', tema: 'Educación', estado: 'enviado', fecha: haceHoras(60),
     texto: 'Hablen con los rectores antes de proponer cambios en los colegios; ellos conocen el problema.' },
+];
+
+const prado = { nivel: 'barrio' as const, ids: ['b-prado'], etiqueta: 'Barrio El Prado' };
+const florencia = { nivel: 'municipio' as const, ids: ['18001'], etiqueta: 'Florencia' };
+
+/** Agenda interna de la campaña de prueba (Laura Gómez). */
+export const ACTIVIDADES: Actividad[] = [
+  { id: 'v1', candidato: 'k1', tipo: 'medios', titulo: 'Entrevista en emisora local', fecha: enDias(0, 8), lugar: 'Radio Florencia',
+    comunidad: florencia, responsable: 'Jefe de prensa', estado: 'programada' },
+  { id: 'v2', candidato: 'k1', tipo: 'visita', titulo: 'Visita barrio El Prado', fecha: enDias(0, 11), lugar: 'Salón comunal',
+    comunidad: prado, responsable: 'Líder comunal de El Prado', estado: 'programada', asistentesEsperados: 60 },
+  { id: 'v3', candidato: 'k1', tipo: 'reunion', titulo: 'Reunión con coordinadores', fecha: enDias(0, 17), lugar: 'Sede de campaña',
+    comunidad: florencia, estado: 'programada' },
+  { id: 'v4', candidato: 'k1', tipo: 'visita', titulo: 'Recorrido por San Luis', fecha: enDias(3, 10), lugar: 'Parque de San Luis',
+    comunidad: { nivel: 'barrio', ids: ['b-sanluis'], etiqueta: 'Barrio San Luis' }, responsable: 'Coordinador Comuna 2',
+    estado: 'programada', asistentesEsperados: 40 },
+  { id: 'v5', candidato: 'k1', tipo: 'visita', titulo: 'Visita barrio Centro', fecha: enDias(-4, 10), lugar: 'Plaza de mercado',
+    comunidad: { nivel: 'barrio', ids: ['b-centro'], etiqueta: 'Barrio Centro' }, estado: 'realizada',
+    asistentesEsperados: 50, asistentesReales: 72, notas: 'Piden alumbrado en la calle 8 y control de motos en la noche.' },
+];
+
+/** Compromisos de la campaña de prueba. */
+export const COMPROMISOS: Compromiso[] = [
+  { id: 'm1', candidato: 'k1', que: 'Renovar el alumbrado de la calle 8', conQuien: 'Junta de acción comunal del Centro',
+    comunidad: { nivel: 'barrio', ids: ['b-centro'], etiqueta: 'Barrio Centro' }, estado: 'incluido', fecha: haceHoras(96),
+    actividad: 'v5', propuesta: 'p2' },
+  { id: 'm2', candidato: 'k1', que: 'Estudiar un plan de control de motos en horario nocturno', conQuien: 'Comerciantes de la plaza',
+    comunidad: { nivel: 'barrio', ids: ['b-centro'], etiqueta: 'Barrio Centro' }, estado: 'en_estudio', fecha: haceHoras(96),
+    actividad: 'v5' },
 ];
