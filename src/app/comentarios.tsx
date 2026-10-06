@@ -42,11 +42,11 @@ export default function Comentarios() {
     setError(undefined);
     try {
       if (esMia) {
-        comentar(pub.id, texto, { nombre: c.nombre, deCampana: true });
+        comentar(pub.id, texto, { nombre: c.nombre, foto: c.foto, deCampana: true });
       } else if (ciudadano) {
         const ub = ciudadano.ubicacion;
         const lugar = ub.barrio ? `Barrio ${nombreZona(ub.barrio)}` : nombreMunicipio(ub.municipio);
-        comentar(pub.id, texto, { nombre: ciudadano.nombre, lugar, deCampana: false });
+        comentar(pub.id, texto, { nombre: ciudadano.nombre, lugar, foto: ciudadano.foto, deCampana: false });
       }
       setTexto('');
     } catch (e) {

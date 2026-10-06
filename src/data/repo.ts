@@ -463,13 +463,14 @@ export function nombreCorto(nombre: string) {
 }
 
 /** Comentar como ciudadano (nombre corto y barrio) o como la campaña de la publicación. */
-export function comentar(publicacion: string, texto: string, autor: { nombre: string; lugar?: string; deCampana: boolean }) {
+export function comentar(publicacion: string, texto: string, autor: { nombre: string; lugar?: string; foto?: string; deCampana: boolean }) {
   const t = texto.trim();
   if (!t) throw new Error('Escribe tu comentario.');
   if (t.length > MAX_COMENTARIO) throw new Error(`El comentario puede tener hasta ${MAX_COMENTARIO} caracteres.`);
   const c: Comentario = {
     id: nuevoId(), publicacion, texto: t, fecha: new Date().toISOString(), mio: true, oculto: false,
     deCampana: autor.deCampana, autor: autor.deCampana ? autor.nombre : nombreCorto(autor.nombre), lugar: autor.deCampana ? undefined : autor.lugar,
+    foto: autor.foto,
   };
   COMENTARIOS.push(c);
   remoto.comentar(c);
@@ -491,6 +492,33 @@ export function ocultarComentario(id: string, oculto: boolean) {
   if (!c) return;
   c.oculto = oculto;
   remoto.ocultarComentario(id, oculto);
+  avisar();
+}
+
+/* ---------- Fotos de perfil ---------- */
+
+/**
+ * Foto de quien usa la app (como ciudadano y en el equipo de una campaña).
+ * Devuelve la dirección para mostrarla de inmediato; null la quita.
+ */
+export function ponerMiFoto(archivo: ArchivoLocal | null, miembro?: string | null): string | undefined {
+  const uri = archivo?.uri;
+  const m = miembro ? getMiembro(miembro) : undefined;
+  if (m) m.foto = uri;
+  COMENTARIOS.filter((c) => c.mio && !c.deCampana).forEach((c) => (c.foto = uri));
+  remoto.ponerFoto(archivo);
+  avisar();
+  return uri;
+}
+
+/** Foto pública del candidato: la que se ve en el feed, en su perfil y en sus respuestas. */
+export function ponerFotoCampana(candidato: string, archivo: ArchivoLocal | null) {
+  const c = getCandidato(candidato);
+  if (!c) return;
+  c.foto = archivo?.uri;
+  const suyas = new Set(publicacionesDe(candidato).map((p) => p.id));
+  COMENTARIOS.filter((x) => x.deCampana && suyas.has(x.publicacion)).forEach((x) => (x.foto = c.foto));
+  remoto.ponerFoto(archivo, candidato);
   avisar();
 }
 

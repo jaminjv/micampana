@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CandidatoRow } from '@/components/cards';
+import { FotoPerfil } from '@/components/FotoPerfil';
 import { Badge, Button, Card, Small } from '@/components/ui';
 import { nombreMunicipio } from '@/data/catalogos';
 import { getAporte, getCandidato, getEvento, useDatos } from '@/data/repo';
@@ -21,7 +22,7 @@ const TIPO: Record<TipoAporte, string> = { idea: 'Idea', consejo: 'Consejo', cri
 
 /** Mis aportes, candidatos que sigo y eventos a los que asistiré. */
 export default function Actividad() {
-  const { ciudadano, misAportes } = useApp();
+  const { ciudadano, misAportes, cambiarMiFoto } = useApp();
   useDatos();
   if (!ciudadano) return null;
   const aportes = misAportes.map(getAporte).filter((a) => !!a);
@@ -30,8 +31,13 @@ export default function Actividad() {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <ScrollView contentContainerStyle={s.content}>
-        <Text style={s.title} accessibilityRole="header">{`Hola, ${ciudadano.nombre.split(' ')[0]}`}</Text>
-        <Small>{nombreMunicipio(ciudadano.ubicacion.municipio)}</Small>
+        <View style={s.perfil}>
+          <FotoPerfil nombre={ciudadano.nombre} foto={ciudadano.foto} onCambiar={cambiarMiFoto} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={s.title} accessibilityRole="header">{`Hola, ${ciudadano.nombre.split(' ')[0]}`}</Text>
+            <Small>{nombreMunicipio(ciudadano.ubicacion.municipio)}</Small>
+          </View>
+        </View>
 
         <Text style={s.h2}>Mis aportes</Text>
         {aportes.length === 0 ? <Small>Aún no has escrito a ningún candidato.</Small> : null}
@@ -86,6 +92,7 @@ export default function Actividad() {
 }
 
 const s = StyleSheet.create({
+  perfil: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   root: { flex: 1, backgroundColor: colors.background },
   content: { padding: 20, gap: 12 },
   title: { fontSize: 26, fontWeight: '700', color: colors.ink },

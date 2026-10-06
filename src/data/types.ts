@@ -79,6 +79,8 @@ export interface Candidato {
   tipoLista?: TipoLista;
   numero?: number;
   seguidores: number;
+  /** Foto pública del candidato (dirección para mostrarla). */
+  foto?: string;
   modo?: ModoUso;
   /** Aval o constancia de inscripción: ruta en el almacenamiento privado (o nombre, con datos de prueba). */
   soporte?: string;
@@ -145,6 +147,7 @@ export interface Comentario {
   /** Nombre corto ("Rosa C.") o, si responde la campaña, el nombre del candidato. */
   autor: string;
   lugar?: string;
+  foto?: string;
   deCampana: boolean;
   texto: string;
   fecha: string;
@@ -172,6 +175,7 @@ export interface Ciudadano {
   autorizoDatos: boolean;
   siguiendo: string[]; // ids de candidato
   asistire: string[]; // ids de evento
+  foto?: string;
 }
 
 /* ---------- Agenda y compromisos (lado candidato) ---------- */
@@ -233,6 +237,7 @@ export interface Miembro {
   cupo?: number; // colaboradores que puede registrar un líder
   activo: boolean;
   desde: string; // ISO
+  foto?: string;
 }
 
 /** Código para unirse a una campaña con un rol, un territorio y unas funciones. */

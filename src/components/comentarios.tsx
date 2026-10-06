@@ -85,7 +85,7 @@ export function ComentariosRecientes({ pub, max = 2 }: { pub: string; max?: numb
 export function ComentarioFila({ c, puedeOcultar }: { c: Comentario; puedeOcultar?: boolean }) {
   return (
     <View style={[s.fila, c.oculto && { opacity: 0.6 }]}>
-      <Avatar nombre={c.autor} size={34} />
+      <Avatar nombre={c.autor} foto={c.foto} size={34} />
       <View style={{ flex: 1, gap: 2 }}>
         <View style={s.cabeza}>
           <Text style={[s.autor, c.deCampana && { color: colors.primary }]}>{c.autor}</Text>

@@ -1,5 +1,6 @@
 /** Componentes de interfaz compartidos. Todos usan el tema de src/theme.ts. */
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import type { ComponentProps, ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
@@ -280,11 +281,15 @@ export function Notice({ icon, children, tone = 'warn' }: { icon: IconName; chil
   );
 }
 
-/** Avatar con iniciales mientras no hay foto. */
-export function Avatar({ nombre, size = 48 }: { nombre: string; size?: number }) {
+/** Foto de perfil redonda; con iniciales mientras no hay foto. */
+export function Avatar({ nombre, size = 48, foto }: { nombre: string; size?: number; foto?: string }) {
   const iniciales = nombre.split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+  const caja = { width: size, height: size, borderRadius: size / 2 };
+  if (foto) {
+    return <Image source={{ uri: foto }} style={[caja, { backgroundColor: colors.placeholder }]} contentFit="cover" transition={200} accessibilityLabel={`Foto de ${nombre}`} />;
+  }
   return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.placeholder, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={[caja, { backgroundColor: colors.placeholder, alignItems: 'center', justifyContent: 'center' }]}>
       <Text style={{ color: colors.inkSoft, fontWeight: '700', fontSize: size * 0.36 }}>{iniciales}</Text>
     </View>
   );

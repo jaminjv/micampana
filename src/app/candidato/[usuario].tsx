@@ -55,7 +55,7 @@ export default function PerfilCandidato() {
     <Screen header={<TopBar title={`@${c.usuario}`} />}>
       <Card style={{ gap: 12 }}>
         <Row gap={12}>
-          <Avatar nombre={c.nombre} size={64} />
+          <Avatar nombre={c.nombre} foto={c.foto} size={64} />
           <View style={{ flex: 1, gap: 2 }}>
             <Row gap={6}>
               <Text style={s.name}>{c.nombre}</Text>

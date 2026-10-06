@@ -94,6 +94,7 @@ const candidatoDe = (r: any): Candidato => ({
   tipoLista: r.tipo_lista ?? undefined,
   numero: r.numero ?? undefined,
   seguidores: r.seguidores ?? 0,
+  foto: urlAvatar(r.foto),
   modo: r.modo,
   soporte: r.soporte_url ?? undefined,
   cupoPorLider: r.cupo_por_lider ?? undefined,
@@ -131,7 +132,7 @@ function publicacionDe(r: any): Publicacion | null {
 }
 
 const comentarioDe = (r: any): Comentario => ({
-  id: r.id, publicacion: r.publicacion_id, autor: r.autor_nombre, lugar: r.lugar ?? undefined, deCampana: !!r.de_campana,
+  id: r.id, publicacion: r.publicacion_id, autor: r.autor_nombre, lugar: r.lugar ?? undefined, foto: urlAvatar(r.autor_foto), deCampana: !!r.de_campana,
   texto: r.texto, fecha: r.creado, mio: r.perfil_id === uid, oculto: !!r.oculto,
 });
 
@@ -156,7 +157,7 @@ const miembroDe = (r: any): Miembro => ({
   id: r.id, candidato: r.campana_id, nombre: r.nombre || 'Sin nombre', rol: r.rol, superior: r.superior ?? undefined,
   zona: r.nivel ? alcanceDe(r) : { nivel: 'municipio', ids: [], etiqueta: 'Toda la campaña' },
   delegadoAgenda: !!r.delegado_agenda, delegadoAprobaciones: !!r.delegado_aprobaciones, cupo: r.cupo ?? undefined,
-  activo: !!r.activo, desde: r.creado,
+  activo: !!r.activo, desde: r.creado, foto: urlAvatar(r.foto),
 });
 
 const invitacionDe = (r: any): Invitacion => ({
@@ -302,6 +303,7 @@ export async function cargarTodo(): Promise<SesionRemota> {
           autorizoDatos: true,
           siguiendo: sigo.map((s: any) => s.campana_id),
           asistire: voy.map((a: any) => a.evento_id),
+          foto: urlAvatar(perfil.foto),
         }
       : null;
 
@@ -607,11 +609,11 @@ export function rutaEquipo(campana: string, nombre: string, original: string): s
   return `${campana}/${nombre}.${ext}`;
 }
 
-/** Sube un archivo local a la carpeta privada del equipo. */
-async function subir(ruta: string, a: ArchivoLocal) {
+/** Sube un archivo local (por defecto, a la carpeta privada del equipo). */
+async function subir(ruta: string, a: ArchivoLocal, bucket = BUCKET_EQUIPO) {
   try {
     const datos = await (await fetch(a.uri)).arrayBuffer();
-    const r = await db().storage.from(BUCKET_EQUIPO).upload(ruta, datos, { contentType: a.tipo, upsert: false });
+    const r = await db().storage.from(bucket).upload(ruta, datos, { contentType: a.tipo, upsert: false });
     return { error: r.error ? { message: r.error.message } : null };
   } catch {
     return { error: { message: 'no se pudo leer la foto en el teléfono.' } };
@@ -768,4 +770,35 @@ export function borrarComentario(id: string) {
 
 export function ocultarComentario(id: string, oculto: boolean) {
   escribir(oculto ? 'ocultar el comentario' : 'mostrar el comentario', () => db().from('comentarios').update({ oculto }).eq('id', id));
+}
+
+/* ---------- Fotos de perfil (públicas) ---------- */
+
+const BUCKET_AVATARES = 'avatares';
+
+/** Dirección pública de una foto de perfil guardada en la base de datos. */
+export function urlAvatar(ruta?: string | null): string | undefined {
+  if (!ruta || !supabase) return undefined;
+  return supabase.storage.from(BUCKET_AVATARES).getPublicUrl(ruta).data.publicUrl;
+}
+
+/**
+ * Cambia la foto de la persona (archivo) o la quita (null). Con campana, la
+ * foto pública de esa campaña. La carpeta es la del usuario (la política lo exige).
+ */
+export function ponerFoto(a: ArchivoLocal | null, campana?: string) {
+  const ext = (a?.nombre.match(/\.(\w{2,5})$/)?.[1] ?? 'jpg').toLowerCase();
+  const ruta = a ? `${uid}/${Date.now().toString(36)}.${ext}` : null;
+  let subida = true;
+  if (a) {
+    escribir('subir tu foto', async () => {
+      const r = await subir(ruta!, a, BUCKET_AVATARES);
+      if (r.error) subida = false;
+      return r;
+    });
+  }
+  escribir('guardar tu foto', async () => {
+    if (!subida) return { error: { message: 'no se subió la foto. Inténtalo de nuevo.' } };
+    return campana ? db().rpc('poner_foto_campana', { p_campana: campana, p_ruta: ruta }) : db().rpc('poner_foto', { p_ruta: ruta });
+  });
 }

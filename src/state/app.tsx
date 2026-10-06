@@ -7,7 +7,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 
 import * as remoto from '@/data/remoto';
 import {
-  asistir, enviarAporte as guardarAporte, getCandidato, getMiembro, guardarCampana, seguir, useDatos, usarInvitacion,
+  asistir, enviarAporte as guardarAporte, getCandidato, getMiembro, guardarCampana, ponerMiFoto, seguir, useDatos, usarInvitacion,
 } from '@/data/repo';
 import type {
   ArchivoLocal, Candidato, Cargo, Ciudadano, Miembro, Etapa, ModoUso, TipoAporte, TipoAval, TipoLista, Tema,
@@ -46,6 +46,8 @@ interface AppState {
   registrarCiudadano: (c: Omit<Ciudadano, 'siguiendo' | 'asistire'>) => void;
   alternarSeguir: (candidatoId: string) => void;
   alternarAsistire: (eventoId: string) => void;
+  /** Foto de perfil de quien usa la app (ciudadano y equipo); null la quita. */
+  cambiarMiFoto: (a: ArchivoLocal | null) => void;
 
   /** Ids de los aportes que envió este ciudadano. */
   misAportes: string[];
@@ -139,6 +141,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const si = !ciudadano.asistire.includes(id);
         setCiudadano({ ...ciudadano, asistire: si ? [...ciudadano.asistire, id] : ciudadano.asistire.filter((x) => x !== id) });
         asistir(id, si);
+      },
+
+      cambiarMiFoto: (a) => {
+        const foto = ponerMiFoto(a, miembroId);
+        setCiudadano((prev) => (prev ? { ...prev, foto } : prev));
       },
 
       misAportes,

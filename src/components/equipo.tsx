@@ -8,7 +8,9 @@ import { cupoDe, edad, getMiembro } from '@/data/repo';
 import * as remoto from '@/data/remoto';
 import type { ArchivoLocal, Colaborador, Miembro, RolEquipo, SolicitudVisita } from '@/data/types';
 import { diaRelativo, hace, horaTexto } from '@/lib/fechas';
+import { useApp } from '@/state/app';
 import { colors, radius, shadow, type } from '@/theme';
+import { FotoPerfil } from './FotoPerfil';
 import { Text } from './Texto';
 import { Badge, Button, Ionicons, Row, Small } from './ui';
 
@@ -22,13 +24,17 @@ export const AYUDA_EN = ['Volanteo', 'Puerta a puerta', 'Logística', 'Redes', '
 
 /** Bloque superior en Azul Noche de las vistas del equipo. */
 export function CabeceraEquipo({ m, titulo, children }: { m: Miembro; titulo: string; children?: ReactNode }) {
+  const { cambiarMiFoto } = useApp();
   return (
     <View style={s.cabecera}>
       <View style={s.ancho}>
         <View style={s.etiqueta}>
           <Text style={s.etiquetaTexto}>{`${ROLES[m.rol]} · ${m.zona.etiqueta}`}</Text>
         </View>
-        <Text style={s.titulo} accessibilityRole="header">{titulo}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <FotoPerfil nombre={m.nombre} foto={m.foto} size={56} onCambiar={cambiarMiFoto} oscura />
+          <Text style={[s.titulo, { flex: 1 }]} accessibilityRole="header">{titulo}</Text>
+        </View>
         {children}
       </View>
     </View>

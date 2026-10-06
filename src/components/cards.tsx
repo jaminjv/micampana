@@ -17,7 +17,7 @@ export function CandidatoRow({ c, compacto, destino = 'perfil' }: { c: Candidato
   return (
     <Link href={{ pathname, params: { usuario: c.usuario } }} asChild>
       <Pressable accessibilityRole="link" style={StyleSheet.flatten([s.candRow, !compacto && s.candCard])}>
-        <Avatar nombre={c.nombre} size={compacto ? 40 : 52} />
+        <Avatar nombre={c.nombre} foto={c.foto} size={compacto ? 40 : 52} />
         <View style={{ flex: 1, gap: 2 }}>
           <Row gap={6}>
             <Text style={s.candName}>{c.nombre}</Text>
@@ -106,7 +106,7 @@ export function PostCard({ pub, asistire, onAsistire, soloLectura, sinRecientes 
     <View style={s.post}>
       <Link href={{ pathname: '/candidato/[usuario]', params: { usuario: c.usuario } }} asChild>
         <Pressable accessibilityRole="link" style={s.postHead}>
-          <Avatar nombre={c.nombre} size={40} />
+          <Avatar nombre={c.nombre} foto={c.foto} size={40} />
           <View style={{ flex: 1 }}>
             <Row gap={6}>
               <Text style={s.candName} numberOfLines={1}>{c.nombre}</Text>

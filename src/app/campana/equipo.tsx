@@ -81,7 +81,7 @@ function BloqueCoordinador({ q, lideres }: { q: Miembro; lideres: Miembro[] }) {
   return (
     <View style={s.bloque}>
       <Row gap={12}>
-        <Avatar nombre={q.nombre} size={44} />
+        <Avatar nombre={q.nombre} foto={q.foto} size={44} />
         <View style={{ flex: 1 }}>
           <Text style={s.nombre}>{q.nombre}</Text>
           <Small>{`Coordinador · ${q.zona.etiqueta} · ${lideres.length} líderes`}</Small>

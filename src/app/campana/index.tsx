@@ -5,7 +5,8 @@ import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Button, Card, Ionicons, Notice, Row, Screen, Small, Title, type IconName } from '@/components/ui';
 import { CARGOS, nombreDepartamento, nombreMunicipio, nombrePartido } from '@/data/catalogos';
 import { ListaActividades } from '@/components/agenda';
-import { agendaDe, agendaDelDia, aportesDeCampana, compromisosDe, miembrosDe, propuestasDeCampana, solicitudesDe } from '@/data/repo';
+import { FotoPerfil } from '@/components/FotoPerfil';
+import { agendaDe, agendaDelDia, aportesDeCampana, compromisosDe, miembrosDe, ponerFotoCampana, propuestasDeCampana, solicitudesDe } from '@/data/repo';
 import { diaRelativo, fechaLarga, horaTexto } from '@/lib/fechas';
 import { useApp, useMiCampana } from '@/state/app';
 import { colors, radius, shadow } from '@/theme';
@@ -112,8 +113,13 @@ export default function Panel() {
               {`${aspirante ? 'Aspirante' : 'Candidato'} · ${cargo.nombre} · ${lugar}`}
             </Text>
           </View>
-          <Text style={s.fecha}>{fechaLarga(new Date().toISOString())}</Text>
-          <Text style={s.hola} accessibilityRole="header">{`Hola, ${campana.nombre.split(' ')[0]}`}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <FotoPerfil nombre={campana.nombre} foto={campana.foto} size={64} oscura onCambiar={(a) => ponerFotoCampana(campana.id, a)} />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={s.fecha}>{fechaLarga(new Date().toISOString())}</Text>
+              <Text style={s.hola} accessibilityRole="header">{`Hola, ${campana.nombre.split(' ')[0]}`}</Text>
+            </View>
+          </View>
           {aval ? <Text style={s.aval}>{`${aval}${candidatura.numero ? ` · N.º ${candidatura.numero}` : ''}`}</Text> : null}
           <View style={s.stats}>
             <Stat n={campana.seguidores} label="Seguidores" />

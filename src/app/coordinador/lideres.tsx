@@ -35,7 +35,7 @@ export default function Lideres() {
             accessibilityRole="button"
             onPress={() => router.push({ pathname: '/colaboradores', params: { lider: l.id } })}
             style={({ pressed }) => [s.fila, pressed && { opacity: 0.9 }]}>
-            <Avatar nombre={l.nombre} size={44} />
+            <Avatar nombre={l.nombre} foto={l.foto} size={44} />
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={s.nombre}>{l.nombre}</Text>
               <Small>{`${l.zona.etiqueta} · ${cupo.usados} de ${cupo.total} colaboradores`}</Small>
