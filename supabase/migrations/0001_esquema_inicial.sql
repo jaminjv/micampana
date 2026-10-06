@@ -379,6 +379,9 @@ alter table partidos enable row level security;
 alter table departamentos enable row level security;
 alter table municipios enable row level security;
 alter table zonas enable row level security;
+-- Sin políticas: nadie las lee ni escribe desde la app (solo funciones del servidor).
+alter table invitaciones enable row level security;
+alter table auditoria enable row level security;
 
 -- Catálogos: lectura pública.
 create policy "catalogo legible" on partidos for select using (true);

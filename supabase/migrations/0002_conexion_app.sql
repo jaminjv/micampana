@@ -12,6 +12,11 @@
 -- escribir con los permisos de su dueño. Nadie más puede escribir versiones.
 alter function versionar_propuesta() security definer;
 
+-- Corrección: invitaciones y auditoría quedaron sin RLS en 0001. Sin políticas,
+-- nadie las lee desde la app. Repetirlo no hace daño si ya estaba activado.
+alter table invitaciones enable row level security;
+alter table auditoria enable row level security;
+
 -- ---------------------------------------------------------------------------
 -- Campos que usa la app
 -- ---------------------------------------------------------------------------
