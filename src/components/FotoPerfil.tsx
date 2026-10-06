@@ -1,10 +1,12 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Modal, Pressable, View } from 'react-native';
+import Animated, { SlideInDown } from 'react-native-reanimated';
 
 import type { ArchivoLocal } from '@/data/types';
 import { colors, radius, shadow, estilos } from '@/theme';
 import { Text } from './Texto';
+import { Vidrio } from './Vidrio';
 import { Avatar, Button, Ionicons, Small } from './ui';
 
 /**
@@ -58,7 +60,9 @@ export function FotoPerfil({
 
       <Modal visible={abierto} transparent animationType="fade" onRequestClose={() => setAbierto(false)}>
         <Pressable style={s.fondo} onPress={() => setAbierto(false)} accessibilityLabel="Cerrar">
-          <Pressable style={s.hoja} onPress={() => {}}>
+          <Animated.View entering={SlideInDown.springify().damping(18)} style={s.ancho}>
+          <Pressable onPress={() => {}}>
+          <Vidrio style={s.hoja} intensidad={70}>
             <View style={{ alignItems: 'center', gap: 8 }}>
               <Avatar nombre={nombre} foto={foto} size={88} />
               <Text style={s.titulo}>Foto de perfil</Text>
@@ -78,7 +82,9 @@ export function FotoPerfil({
             ) : null}
             {error ? <Small style={{ color: colors.dangerFg, textAlign: 'center' }}>{error}</Small> : null}
             <Button label="Cancelar" variant="ghost" onPress={() => setAbierto(false)} />
+          </Vidrio>
           </Pressable>
+          </Animated.View>
         </Pressable>
       </Modal>
     </>
@@ -91,9 +97,7 @@ const s = estilos(() => ({
     backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
   },
   fondo: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.5)', justifyContent: 'flex-end', alignItems: 'center' },
-  hoja: {
-    width: '100%', maxWidth: 520, gap: 10, padding: 20, paddingBottom: 32, backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, ...shadow.md,
-  },
+  ancho: { width: '100%', maxWidth: 520 },
+  hoja: { gap: 10, padding: 20, paddingBottom: 32, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, ...shadow.md },
   titulo: { fontSize: 18, fontWeight: '700', color: colors.ink },
 }));

@@ -23,6 +23,7 @@ El nombre se cambia en `src/config.ts` y `app.json`. La identidad visual (colore
 | Reacciones (manito arriba y abajo) y comentarios en las publicaciones del feed; el candidato ve los totales en Publicaciones, responde como campaña y puede ocultar comentarios ofensivos | Hecho y probado con PostgREST local |
 | Fotos de perfil (tomarla o elegirla de la galería): ciudadano en Mi actividad, candidato en su panel, coordinador y líder en su inicio; se ven en el feed, el perfil, los comentarios y el equipo | Hecho y probado con PostgREST local |
 | Apariencia clara u oscura en toda la app (como el teléfono, clara u oscura): botón de sol/luna en la bienvenida y selector en Tu cuenta y en Mi actividad; se recuerda en el teléfono | Hecho |
+| Animaciones (botones con resorte, publicaciones y herramientas que entran en cascada, manitos que saltan con vibración) y efecto vidrio: cabecera del feed y barra de pestañas flotante (Liquid Glass nativo en iPhone con iOS 26; desenfoque en iOS anterior y web) | Hecho |
 | Versión de marketing | Pendiente |
 | Agenda del candidato (hoy, próximas y pasadas; visitas con asistencia y notas; aviso de cruces; publicar como evento) y compromisos con comunidades (desde visitas o aportes, estados, convertir en propuesta) | Hecho |
 | Sondeos y marketing (lado candidato) | Pendiente |

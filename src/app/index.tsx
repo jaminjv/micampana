@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
+import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BotonTema } from '@/components/SelectorTema';
@@ -23,14 +24,17 @@ export default function Bienvenida() {
       <View style={s.arriba}>
         <BotonTema />
       </View>
-      <View style={s.hero}>
+      <Animated.View entering={ZoomIn.duration(500)} style={s.hero}>
         <Image source={esOscuro() ? require('@/../assets/images/logo-nexo-blanco.png') : require('@/../assets/images/logo-nexo.png')} style={s.logo} contentFit="contain" accessibilityLabel={APP_NAME} />
-        <Text style={s.tagline}>Construyamos</Text>
-      </View>
+        <Animated.View entering={FadeIn.delay(350).duration(600)}>
+          <Text style={s.tagline}>Construyamos</Text>
+        </Animated.View>
+      </Animated.View>
 
       <View style={s.options}>
         <Entrada
           icon="people"
+          orden={1}
           acento
           title="Soy ciudadano"
           text="Conoce a los candidatos de tu región, sus propuestas y escríbeles."
@@ -38,6 +42,7 @@ export default function Bienvenida() {
         />
         <Entrada
           icon="flag"
+          orden={2}
           title="Soy aspirante o candidato"
           text="Crea tu perfil público y organiza tu campaña."
           onPress={() => {
@@ -49,6 +54,7 @@ export default function Bienvenida() {
         {miembro ? (
           <Entrada
             icon="briefcase"
+            orden={3}
             title={`Mi equipo: ${ROLES[miembro.rol]}`}
             text={`${miembro.zona.etiqueta} · campaña de ${getCandidato(miembro.candidato)?.nombre ?? ''}`}
             onPress={() => router.push(miembro.rol === 'coordinador' ? '/coordinador' : '/lider')}
@@ -56,6 +62,7 @@ export default function Bienvenida() {
         ) : (
           <Entrada
             icon="key"
+            orden={3}
             title="Tengo un código de invitación"
             text="Para coordinadores, líderes y equipos de marketing."
             onPress={() => router.push('/invitacion')}
@@ -76,8 +83,11 @@ export default function Bienvenida() {
   );
 }
 
-function Entrada({ icon, title, text, onPress, acento }: { icon: IconName; title: string; text: string; onPress: () => void; acento?: boolean }) {
+function Entrada({
+  icon, title, text, onPress, acento, orden = 0,
+}: { icon: IconName; title: string; text: string; onPress: () => void; acento?: boolean; orden?: number }) {
   return (
+    <Animated.View entering={FadeInDown.delay(200 + orden * 90).springify().damping(16)}>
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [s.entrada, pressed && { opacity: 0.85 }]}>
       <View style={[s.entradaIcon, acento && { backgroundColor: colors.accentTint }]}>
         <Ionicons name={icon} size={22} color={acento ? colors.accent : colors.primary} />
@@ -88,6 +98,7 @@ function Entrada({ icon, title, text, onPress, acento }: { icon: IconName; title
       </View>
       <Ionicons name="chevron-forward" size={20} color={colors.faint} />
     </Pressable>
+    </Animated.View>
   );
 }
 

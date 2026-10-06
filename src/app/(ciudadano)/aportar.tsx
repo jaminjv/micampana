@@ -1,6 +1,7 @@
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useEspacioTabs } from '@/components/tabs';
 import { CandidatoRow } from '@/components/cards';
 import { Small } from '@/components/ui';
 import { buscarCandidatos } from '@/data/repo';
@@ -10,6 +11,7 @@ import { Text } from '@/components/Texto';
 
 /** Elegir a qué candidato escribirle. Primero los que sigue, luego los de su región. */
 export default function Aportar() {
+  const espacio = useEspacioTabs();
   const { ciudadano } = useApp();
   if (!ciudadano) return null;
   const region = buscarCandidatos({ texto: '', soloMiRegion: true }, ciudadano.ubicacion);
@@ -18,7 +20,7 @@ export default function Aportar() {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <ScrollView contentContainerStyle={s.content}>
+      <ScrollView contentContainerStyle={[s.content, { paddingBottom: espacio }]}>
         <Text style={s.title} accessibilityRole="header">¿A quién le escribes?</Text>
         <Small>Envía una idea, un consejo, una crítica o una solicitud. Su equipo la lee y te responde aquí.</Small>
         {seguidos.length ? (

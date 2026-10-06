@@ -1,12 +1,14 @@
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
+import Animated, { FadeInDown, LinearTransition, useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 
 import { borrarComentario, comentariosDe, ocultarComentario, reaccionar, reaccionesDe } from '@/data/repo';
 import type { Comentario } from '@/data/types';
 import { hace } from '@/lib/fechas';
+import { tocar } from '@/lib/tacto';
 import { colors, radius, estilos } from '@/theme';
 import { Text } from './Texto';
-import { Avatar, Ionicons, type IconName } from './ui';
+import { Avatar, Ionicons, RESORTE, type IconName } from './ui';
 
 /** Ver los comentarios de una publicación. */
 export const abrirComentarios = (pub: string) => router.push({ pathname: '/comentarios', params: { pub } });
@@ -47,6 +49,8 @@ export function BarraReacciones({ pub, soloLectura }: { pub: string; soloLectura
 function BotonReaccion({
   icon, n, activo, color = colors.muted, fondo, label, texto, onPress,
 }: { icon: IconName; n: number; activo?: boolean; color?: string; fondo?: string; label: string; texto?: string; onPress?: () => void }) {
+  const escala = useSharedValue(1);
+  const animado = useAnimatedStyle(() => ({ transform: [{ scale: escala.value }] }));
   return (
     <Pressable
       accessibilityRole="button"
@@ -54,9 +58,17 @@ function BotonReaccion({
       accessibilityState={{ selected: !!activo, disabled: !onPress }}
       disabled={!onPress}
       hitSlop={6}
-      onPress={onPress}
-      style={({ pressed }) => [s.boton, activo && { backgroundColor: fondo }, pressed && { transform: [{ scale: 0.94 }] }]}>
-      <Ionicons name={icon} size={18} color={activo ? color : colors.muted} />
+      onPress={() => {
+        if (!onPress) return;
+        // Al reaccionar, la manito salta un poco.
+        escala.value = withSequence(withSpring(1.3, RESORTE), withSpring(1, RESORTE));
+        tocar();
+        onPress();
+      }}
+      style={({ pressed }) => [s.boton, activo && { backgroundColor: fondo }, pressed && { opacity: 0.8 }]}>
+      <Animated.View style={animado}>
+        <Ionicons name={icon} size={18} color={activo ? color : colors.muted} />
+      </Animated.View>
       <Text style={[s.n, activo && { color }]}>{n}</Text>
       {texto ? <Text style={s.n}>{texto}</Text> : null}
     </Pressable>
@@ -84,7 +96,7 @@ export function ComentariosRecientes({ pub, max = 2 }: { pub: string; max?: numb
 /** Un comentario completo. Quien lo escribió puede borrarlo; el candidato, ocultarlo. */
 export function ComentarioFila({ c, puedeOcultar }: { c: Comentario; puedeOcultar?: boolean }) {
   return (
-    <View style={[s.fila, c.oculto && { opacity: 0.6 }]}>
+    <Animated.View entering={FadeInDown.duration(300)} layout={LinearTransition} style={[s.fila, c.oculto && { opacity: 0.6 }]}>
       <Avatar nombre={c.autor} foto={c.foto} size={34} />
       <View style={{ flex: 1, gap: 2 }}>
         <View style={s.cabeza}>
@@ -103,7 +115,7 @@ export function ComentarioFila({ c, puedeOcultar }: { c: Comentario; puedeOculta
           ) : null}
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

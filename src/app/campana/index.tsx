@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { Pressable, useWindowDimensions, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Button, Card, Ionicons, Notice, Row, Screen, Small, Title, type IconName } from '@/components/ui';
 import { CARGOS, nombreDepartamento, nombreMunicipio, nombrePartido } from '@/data/catalogos';
@@ -176,22 +177,24 @@ export default function Panel() {
 
       <Text style={s.h2}>Tus herramientas</Text>
       <View style={s.grid}>
-        {HERRAMIENTAS.map((h) => {
+        {HERRAMIENTAS.map((h, i) => {
           const bloqueada = (aspirante && !h.aspirante) || (soloMensajes && !SOLO_MENSAJES.includes(h.titulo));
           const destino = destinoDe(h);
           const proximamente = !bloqueada && !destino;
           return (
+            // Las herramientas aparecen en cascada al abrir el panel.
+            <Animated.View key={h.titulo} entering={FadeInDown.delay(80 + i * 45).duration(380)} style={s.celda}>
             <Pressable
-              key={h.titulo}
               accessibilityRole="button"
               accessibilityState={{ disabled: bloqueada || proximamente }}
               disabled={bloqueada || proximamente}
               onPress={() => destino && router.push(destino)}
-              style={({ pressed }) => [s.tool, (bloqueada || proximamente) && s.toolLocked, pressed && { opacity: 0.85 }]}>
+              style={({ pressed }) => [s.tool, s.toolCelda, (bloqueada || proximamente) && s.toolLocked, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}>
               <Ionicons name={bloqueada ? 'lock-closed' : h.icon} size={22} color={bloqueada || proximamente ? colors.faint : colors.primary} />
               <Text style={[s.toolTitle, (bloqueada || proximamente) && { color: colors.muted }]}>{h.titulo}</Text>
               <Text style={s.toolText}>{proximamente ? 'Próximamente' : detalle(h)}</Text>
             </Pressable>
+            </Animated.View>
           );
         })}
       </View>
@@ -253,6 +256,8 @@ const s = estilos(() => ({
   h2: { fontSize: 18, fontWeight: '700', color: colors.ink },
   h3: { fontSize: 16, fontWeight: '700', color: colors.ink },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  celda: { width: '48%', flexGrow: 1 },
+  toolCelda: { width: '100%', flexGrow: 1 },
   tool: { width: '48%', flexGrow: 1, minHeight: 104, padding: 14, gap: 4, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, ...shadow.sm },
   toolLocked: { backgroundColor: colors.background, boxShadow: 'none' },
   toolTitle: { fontSize: 15, fontWeight: '600', color: colors.ink, marginTop: 4 },

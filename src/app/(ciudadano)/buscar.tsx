@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useEspacioTabs } from '@/components/tabs';
 import { CandidatoRow } from '@/components/cards';
 import { Chip, Ionicons, Small } from '@/components/ui';
 import { CARGOS, PARTIDOS } from '@/data/catalogos';
@@ -13,6 +14,7 @@ import { Text, TextInput } from '@/components/Texto';
 
 /** Directorio de candidatos: por nombre o @usuario, con filtros de región, cargo y partido. */
 export default function Buscar() {
+  const espacio = useEspacioTabs();
   const { ciudadano } = useApp();
   const [texto, setTexto] = useState('');
   const [soloMiRegion, setSoloMiRegion] = useState(true);
@@ -23,7 +25,7 @@ export default function Buscar() {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[s.content, { paddingBottom: espacio }]} keyboardShouldPersistTaps="handled">
         <Text style={s.title} accessibilityRole="header">Buscar candidatos</Text>
         <View style={s.search}>
           <Ionicons name="search" size={20} color={colors.muted} />

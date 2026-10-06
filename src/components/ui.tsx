@@ -1,6 +1,7 @@
 /** Componentes de interfaz compartidos. Todos usan el tema de src/theme.ts. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import type { ComponentProps, ReactNode } from 'react';
 import { Pressable, ScrollView, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
@@ -8,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
 import { colors, esOscuro, estilos, radius, shadow, space, TOUCH, type } from '@/theme';
+import { useEspacioTabs } from './tabs';
 import { Text, TextInput } from './Texto';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
@@ -28,7 +30,9 @@ interface ScreenProps {
 
 /** Pantalla con área segura, contenido desplazable y pie fijo opcional. */
 export function Screen({ children, footer, header, background = colors.background, scroll = true, padded = true, oscura }: ScreenProps) {
-  const contenido = padded ? styles.screenPad : undefined;
+  // Dentro de pestañas, la barra flotante de vidrio va encima: se deja espacio al final.
+  const espacioTabs = useEspacioTabs();
+  const contenido = [padded ? styles.screenPad : undefined, espacioTabs && !footer ? { paddingBottom: espacioTabs } : undefined];
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: oscura ? colors.night : background }]} edges={['top', 'left', 'right']}>
       <StatusBar style={oscura || esOscuro() ? 'light' : 'dark'} />
@@ -42,7 +46,9 @@ export function Screen({ children, footer, header, background = colors.backgroun
           <View style={[styles.flex, contenido, styles.gap16, padded && styles.ancho]}>{children}</View>
         )}
       </View>
-      {footer ? <SafeAreaView edges={['bottom']} style={styles.footer}>{footer}</SafeAreaView> : null}
+      {footer ? (
+        <SafeAreaView edges={['bottom']} style={[styles.footer, espacioTabs ? { paddingBottom: espacioTabs } : undefined]}>{footer}</SafeAreaView>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -114,7 +120,12 @@ interface ButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
+/** Resorte de las animaciones al tocar: rápido y sin rebotar de más. */
+export const RESORTE = { damping: 18, stiffness: 320, mass: 0.6 };
+
 export function Button({ label, onPress, variant = 'primary', disabled, icon, size = 'lg', style }: ButtonProps) {
+  const escala = useSharedValue(1);
+  const animado = useAnimatedStyle(() => ({ transform: [{ scale: escala.value }] }));
   const fondo = disabled
     ? variant === 'secondary' || variant === 'ghost' ? colors.surface : variant === 'accent' ? colors.accentTint : colors.primaryDisabled
     : variant === 'primary' ? colors.primary
@@ -127,24 +138,27 @@ export function Button({ label, onPress, variant = 'primary', disabled, icon, si
     : variant === 'accent' ? (disabled ? colors.accentOnTint : colors.onAccent)
     : '#FFFFFF';
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled: !!disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.btn,
-        {
-          height: size === 'lg' ? 52 : TOUCH,
-          backgroundColor: pressed && presionado && !disabled ? presionado : fondo,
-          opacity: pressed && !presionado ? 0.85 : 1,
-        },
-        variant === 'secondary' && styles.btnSecondary,
-        style,
-      ]}>
-      {icon ? <Ionicons name={icon} size={18} color={texto} /> : null}
-      <Text style={[styles.btnText, { color: texto, fontSize: size === 'lg' ? 16 : 14 }]}>{label}</Text>
-    </Pressable>
+    <Animated.View style={[animado, style]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !!disabled }}
+        disabled={disabled}
+        onPress={onPress}
+        onPressIn={() => (escala.value = withSpring(0.96, RESORTE))}
+        onPressOut={() => (escala.value = withSpring(1, RESORTE))}
+        style={({ pressed }) => [
+          styles.btn,
+          {
+            height: size === 'lg' ? 52 : TOUCH,
+            backgroundColor: pressed && presionado && !disabled ? presionado : fondo,
+            opacity: pressed && !presionado ? 0.85 : 1,
+          },
+          variant === 'secondary' && styles.btnSecondary,
+        ]}>
+        {icon ? <Ionicons name={icon} size={18} color={texto} /> : null}
+        <Text style={[styles.btnText, { color: texto, fontSize: size === 'lg' ? 16 : 14 }]}>{label}</Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 

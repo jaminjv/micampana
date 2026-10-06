@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useEspacioTabs } from '@/components/tabs';
 import { CandidatoRow } from '@/components/cards';
 import { FotoPerfil } from '@/components/FotoPerfil';
 import { SelectorTema } from '@/components/SelectorTema';
@@ -23,6 +24,7 @@ const TIPO: Record<TipoAporte, string> = { idea: 'Idea', consejo: 'Consejo', cri
 
 /** Mis aportes, candidatos que sigo y eventos a los que asistiré. */
 export default function Actividad() {
+  const espacio = useEspacioTabs();
   const { ciudadano, misAportes, cambiarMiFoto } = useApp();
   useDatos();
   if (!ciudadano) return null;
@@ -31,7 +33,7 @@ export default function Actividad() {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <ScrollView contentContainerStyle={s.content}>
+      <ScrollView contentContainerStyle={[s.content, { paddingBottom: espacio }]}>
         <View style={s.perfil}>
           <FotoPerfil nombre={ciudadano.nombre} foto={ciudadano.foto} onCambiar={cambiarMiFoto} />
           <View style={{ flex: 1, gap: 2 }}>
