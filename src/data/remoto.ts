@@ -716,11 +716,18 @@ export function reportarTarea(t0: Tarea, fotos: ArchivoLocal[]) {
 
 export function guardarSolicitud(v0: SolicitudVisita) {
   const v = foto(v0);
-  escribir(v.estado === 'pendiente' ? 'proponer la visita' : 'guardar la visita', () =>
-    db().from('solicitudes_visita').upsert({
-      id: v.id, campana_id: v.candidato, propuesta_por: v.propuestaPor, lugar: v.lugar, fecha: v.fecha, ...filaAlcance(v.comunidad),
-      asistentes_esperados: v.asistentesEsperados ?? null, temas: v.temas, estado: v.estado, actividad_id: v.actividad ?? null,
-      motivo: v.motivo ?? null,
-    }),
-  );
+  // Proponer es un insert (lo hace el líder); decidir es un update (candidato o
+  // coordinador con agenda). No se usa upsert: exigiría permiso de insertar al que decide.
+  if (v.estado === 'pendiente') {
+    escribir('proponer la visita', () =>
+      db().from('solicitudes_visita').insert({
+        id: v.id, campana_id: v.candidato, propuesta_por: v.propuestaPor, lugar: v.lugar, fecha: v.fecha, ...filaAlcance(v.comunidad),
+        asistentes_esperados: v.asistentesEsperados ?? null, temas: v.temas, estado: v.estado,
+      }),
+    );
+  } else {
+    escribir('guardar la visita', () =>
+      db().from('solicitudes_visita').update({ estado: v.estado, actividad_id: v.actividad ?? null, motivo: v.motivo ?? null }).eq('id', v.id),
+    );
+  }
 }
