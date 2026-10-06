@@ -1,10 +1,11 @@
 import { useLocalSearchParams } from 'expo-router';
 
 import { ListPicker } from '@/components/ListPicker';
+import { SubirSoporte } from '@/components/SubirSoporte';
 import { Body, Button, Chip, ChipRow, Field, Progress, Screen, Segmented, Small, Title, TopBar } from '@/components/ui';
 import { CARGOS, nombrePartido, PARTIDOS } from '@/data/catalogos';
 import type { TipoAval } from '@/data/types';
-import { useApp } from '@/state/app';
+import { useApp, useMiCampana } from '@/state/app';
 import { posicion, siguiente } from '@/state/pasos';
 import { colors } from '@/theme';
 
@@ -15,11 +16,14 @@ export default function Aval() {
   const { borrador, actualizarBorrador, confirmarCandidatura } = useApp();
   const { paso, total } = posicion(borrador, 'aval');
   const tipo = borrador.tipoAval ?? 'partido';
+  // Si ya es candidato y envió un soporte, no hace falta subir otro.
+  const yaEnviado = !!useMiCampana()?.soporte;
 
-  const valido =
+  const avalElegido =
     (tipo === 'partido' && borrador.partidos.length === 1) ||
     (tipo === 'coalicion' && borrador.partidos.length >= 2) ||
     (tipo === 'firmas' && (borrador.grupoSignificativo ?? '').trim().length >= 3);
+  const valido = avalElegido && (!!borrador.soporte || yaEnviado);
 
   const cambiarTipo = (t: TipoAval) =>
     actualizarBorrador({ tipoAval: t, partidos: t === 'firmas' ? [] : t === 'partido' ? borrador.partidos.slice(0, 1) : borrador.partidos });
@@ -94,6 +98,8 @@ export default function Aval() {
           <Small>Lista de partidos y movimientos con personería jurídica vigente según el Consejo Nacional Electoral.</Small>
         </>
       )}
+
+      <SubirSoporte value={borrador.soporte} onChange={(soporte) => actualizarBorrador({ soporte })} yaEnviado={yaEnviado} />
     </Screen>
   );
 }

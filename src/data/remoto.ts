@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { DEPARTAMENTOS, MUNICIPIOS, PARTIDOS, ZONAS } from './catalogos';
 import { ACTIVIDADES, APORTES, CANDIDATOS, COMPROMISOS, EVENTOS, PROPUESTAS, PUBLICACIONES } from './mock';
 import type {
-  Actividad, Alcance, Aporte, Compromiso, Candidato, Ciudadano, Evento, Propuesta, Publicacion, Zona,
+  Actividad, Alcance, Aporte, ArchivoLocal, Compromiso, Candidato, Ciudadano, Evento, Propuesta, Publicacion, Zona,
 } from './types';
 
 export const conectado = !!supabase;
@@ -92,6 +92,7 @@ const candidatoDe = (r: any): Candidato => ({
   numero: r.numero ?? undefined,
   seguidores: r.seguidores ?? 0,
   modo: r.modo,
+  soporte: r.soporte_url ?? undefined,
 });
 
 const propuestaDe = (r: any): Propuesta => ({
@@ -268,14 +269,41 @@ export function guardarPerfilCiudadano(c0: Omit<Ciudadano, 'siguiendo' | 'asisti
   );
 }
 
-export function guardarCampana(c0: Candidato) {
+/** Ruta privada del soporte: una carpeta por usuario (así lo exige la política de almacenamiento). */
+export function rutaSoporte(nombre: string): string {
+  const limpio = nombre.normalize('NFD').replace(/[^\w.-]+/g, '_').slice(-80);
+  return `${uid}/${Date.now()}-${limpio}`;
+}
+
+/**
+ * Guarda la campaña. Si trae un soporte nuevo, primero lo sube; si la subida
+ * falla, la campaña no se actualiza (la base de datos exige el soporte para
+ * pasar de aspirante a candidato).
+ */
+export function guardarCampana(c0: Candidato, soporte?: ArchivoLocal) {
   const c = foto(c0);
+  let subido = true;
+  if (soporte && c.soporte) {
+    const ruta = c.soporte;
+    escribir('subir el aval', async () => {
+      try {
+        const datos = await (await fetch(soporte.uri)).arrayBuffer();
+        const r = await db().storage.from('soportes').upload(ruta, datos, { contentType: soporte.tipo, upsert: false });
+        if (r.error) subido = false;
+        return { error: r.error ? { message: r.error.message } : null };
+      } catch {
+        subido = false;
+        return { error: { message: 'no se pudo leer el archivo en el teléfono.' } };
+      }
+    });
+  }
   // La campaña cuelga de un perfil: se crea si aún no existe (sin tocar uno existente).
   escribir('crear tu perfil', () =>
     db().from('perfiles').upsert({ id: uid, nombre: c.nombre }, { onConflict: 'id', ignoreDuplicates: true }),
   );
-  escribir('guardar tu campaña', () =>
-    db().from('campanas').upsert({
+  escribir('guardar tu campaña', async () => {
+    if (!subido) return { error: { message: 'primero hay que subir el aval. Inténtalo de nuevo.' } };
+    return db().from('campanas').upsert({
       id: c.id,
       titular: uid,
       usuario: c.usuario,
@@ -289,8 +317,9 @@ export function guardarCampana(c0: Candidato) {
       tipo_lista: c.tipoLista ?? null,
       numero: c.numero ?? null,
       modo: c.modo ?? 'campana_completa',
-    }),
-  );
+      soporte_url: c.soporte ?? null,
+    });
+  });
   escribir('guardar el aval', () => db().from('campana_partidos').delete().eq('campana_id', c.id));
   if (c.partidos.length) {
     escribir('guardar el aval', () =>

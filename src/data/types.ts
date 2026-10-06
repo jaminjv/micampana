@@ -80,6 +80,16 @@ export interface Candidato {
   numero?: number;
   seguidores: number;
   modo?: ModoUso;
+  /** Aval o constancia de inscripción: ruta en el almacenamiento privado (o nombre, con datos de prueba). */
+  soporte?: string;
+}
+
+/** Archivo elegido en el teléfono, antes de subirlo. */
+export interface ArchivoLocal {
+  uri: string;
+  nombre: string;
+  tipo: string; // tipo MIME, p. ej. application/pdf
+  tamano?: number; // bytes
 }
 
 export type EstadoPropuesta = 'borrador' | 'publicada' | 'retirada';

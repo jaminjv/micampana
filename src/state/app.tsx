@@ -8,7 +8,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import * as remoto from '@/data/remoto';
 import { asistir, enviarAporte as guardarAporte, getCandidato, guardarCampana, seguir, useDatos } from '@/data/repo';
 import type {
-  Candidato, Cargo, Ciudadano, Etapa, ModoUso, TipoAporte, TipoAval, TipoLista, Tema,
+  ArchivoLocal, Candidato, Cargo, Ciudadano, Etapa, ModoUso, TipoAporte, TipoAval, TipoLista, Tema,
 } from '@/data/types';
 
 /** Borrador del registro de un aspirante o candidato, paso a paso. */
@@ -27,6 +27,8 @@ export interface BorradorCandidatura {
   nombre?: string;
   usuario?: string;
   modo?: ModoUso;
+  /** Aval o constancia elegidos en el teléfono, por subir. */
+  soporte?: ArchivoLocal;
 }
 
 /** Con Supabase, la app espera a cargar los datos antes de mostrarse. */
@@ -153,9 +155,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
             modo: datos.modo,
           },
           campanaId ?? undefined,
+          datos.soporte,
         );
         setCampanaId(id);
-        setCandidatura(datos);
+        // El archivo ya quedó en camino al servidor: no se vuelve a subir.
+        setCandidatura({ ...datos, soporte: undefined });
       },
       cargarBorrador: (b) => setBorrador(b),
       entrarComoDemo: () => {

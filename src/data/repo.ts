@@ -10,7 +10,7 @@ import { CARGOS, municipiosDe, nombreDepartamento, nombreMunicipio, nombrePartid
 import { ACTIVIDADES, APORTES, CANDIDATOS, COMPROMISOS, EVENTOS, PROPUESTAS, PUBLICACIONES } from './mock';
 import * as remoto from './remoto';
 import type {
-  Actividad, Alcance, Aporte, Compromiso, EstadoCompromiso, Candidato, Cargo, Etapa, Evento, ModoUso, Propuesta, Publicacion, Tema, TipoAporte, TipoAval,
+  Actividad, Alcance, Aporte, ArchivoLocal, Compromiso, EstadoCompromiso, Candidato, Cargo, Etapa, Evento, ModoUso, Propuesta, Publicacion, Tema, TipoAporte, TipoAval,
   TipoLista, Ubicacion,
 } from './types';
 
@@ -181,7 +181,7 @@ export interface DatosCampana {
  * Crea la campaña o actualiza la existente (p. ej. al pasar de aspirante a
  * candidato). Conserva el id, el @usuario y los seguidores. Devuelve el id.
  */
-export function guardarCampana(d: DatosCampana, id?: string): string {
+export function guardarCampana(d: DatosCampana, id?: string, soporte?: ArchivoLocal): string {
   const actual = id ? getCandidato(id) : undefined;
   const corporacion = CARGOS[d.cargo].corporacion;
   const datos: Candidato = {
@@ -200,10 +200,12 @@ export function guardarCampana(d: DatosCampana, id?: string): string {
     numero: corporacion ? d.numero : undefined,
     seguidores: actual?.seguidores ?? 0,
     modo: d.modo,
+    // Un soporte nuevo reemplaza al anterior; si no hay, se conserva el que ya estaba.
+    soporte: soporte ? (remoto.conectado ? remoto.rutaSoporte(soporte.nombre) : soporte.nombre) : actual?.soporte,
   };
   if (actual) Object.assign(actual, datos);
   else CANDIDATOS.push(datos);
-  remoto.guardarCampana(datos);
+  remoto.guardarCampana(datos, soporte);
   avisar();
   return datos.id;
 }
