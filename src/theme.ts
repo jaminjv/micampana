@@ -17,6 +17,8 @@ export const colors = {
 
   /** Naranja Coral: llamados a la acción del ciudadano, notificaciones, insignias. */
   accent: '#FF5E3A',
+  /** Texto sobre coral: Azul Noche (5,9:1). El blanco sobre coral solo llega a 3:1. */
+  onAccent: '#0F172A',
   accentPressed: '#E84A27',
   accentTint: '#FFE9E3',
   accentOnTint: '#B9381B',

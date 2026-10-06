@@ -181,7 +181,7 @@ const s = StyleSheet.create({
   statN: { fontSize: 24, fontWeight: '700', color: colors.onNight },
   statL: { fontSize: 13, color: colors.onNightMuted },
   nuevo: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.pill, backgroundColor: colors.accent },
-  nuevoTexto: { fontSize: 11, fontWeight: '700', color: '#FFFFFF' },
+  nuevoTexto: { fontSize: 11, fontWeight: '700', color: colors.onAccent },
   temas: { fontSize: 13, color: colors.onNightMuted },
   h2: { fontSize: 18, fontWeight: '700', color: colors.ink },
   h3: { fontSize: 16, fontWeight: '700', color: colors.ink },

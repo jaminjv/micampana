@@ -115,13 +115,16 @@ interface ButtonProps {
 
 export function Button({ label, onPress, variant = 'primary', disabled, icon, size = 'lg', style }: ButtonProps) {
   const fondo = disabled
-    ? variant === 'secondary' || variant === 'ghost' ? colors.surface : colors.primaryDisabled
+    ? variant === 'secondary' || variant === 'ghost' ? colors.surface : variant === 'accent' ? colors.accentTint : colors.primaryDisabled
     : variant === 'primary' ? colors.primary
     : variant === 'accent' ? colors.accent
     : variant === 'whatsapp' ? colors.whatsapp
     : variant === 'secondary' ? colors.surface : 'transparent';
   const presionado = variant === 'primary' ? colors.primaryPressed : variant === 'accent' ? colors.accentPressed : undefined;
-  const texto = variant === 'secondary' || variant === 'ghost' ? (disabled ? colors.faint : colors.ink) : '#FFFFFF';
+  const texto =
+    variant === 'secondary' || variant === 'ghost' ? (disabled ? colors.faint : colors.ink)
+    : variant === 'accent' ? (disabled ? colors.accentOnTint : colors.onAccent)
+    : '#FFFFFF';
   return (
     <Pressable
       accessibilityRole="button"
